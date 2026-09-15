@@ -40,6 +40,10 @@
         </ToggleButton>
         <TextField fx:id="filterField" promptText="Filter text" prefWidth="180"/>
         <Pane HBox.hgrow="ALWAYS"/>
+        <ToggleButton fx:id="modbusToggle" text="Modbus">
+            <graphic><FontIcon iconLiteral="fth-cpu"/></graphic>
+            <tooltip><Tooltip text="Annotate TX/RX lines that decode as Modbus RTU (valid CRC) or Modbus TCP (MBAP header) with unit, function and data"/></tooltip>
+        </ToggleButton>
         <ToggleButton fx:id="inspectToggle" text="Inspect">
             <graphic><FontIcon iconLiteral="fth-eye"/></graphic>
             <tooltip><Tooltip text="Open the payload inspector for the selected line (Ctrl+I)"/></tooltip>

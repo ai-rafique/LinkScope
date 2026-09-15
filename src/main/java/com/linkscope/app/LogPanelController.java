@@ -5,6 +5,7 @@ import com.linkscope.core.LogEntry.Kind;
 import com.linkscope.core.LogEntry.TimeMode;
 import com.linkscope.core.LogSink;
 import com.linkscope.core.PayloadCodec;
+import com.linkscope.core.protocol.ModbusDecoder;
 import com.linkscope.core.ui.InspectorController;
 import com.linkscope.core.ui.Toasts;
 import javafx.beans.binding.Bindings;
@@ -60,6 +61,7 @@ public class LogPanelController {
     @FXML private ToggleButton autoscrollToggle;
     @FXML private TextField filterField;
     @FXML private ToggleButton inspectToggle;
+    @FXML private ToggleButton modbusToggle;
     @FXML private Button clearButton;
     @FXML private Button saveButton;
     @FXML private FlowPane chipRow;
@@ -136,6 +138,7 @@ public class LogPanelController {
             }
         });
 
+        modbusToggle.selectedProperty().addListener((obs, old, now) -> list.refresh());
         inspectToggle.selectedProperty().addListener((obs, old, shown) -> setInspectorVisible(shown));
         setInspectorVisible(false);
         list.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> {
@@ -335,7 +338,14 @@ public class LogPanelController {
                     prev = filtered.get(idx - 1).time();
                 }
             }
-            setText(item.format(isHex(), timeMode(), prev));
+            String base = item.format(isHex(), timeMode(), prev);
+            String text = base;
+            if (modbusToggle.isSelected() && item.hasPayload()) {
+                text = ModbusDecoder.decode(item.payload())
+                        .map(frame -> base + "   ⇒ " + frame.summary())
+                        .orElse(base);
+            }
+            setText(text);
             getStyleClass().add(switch (item.kind()) {
                 case TX -> "log-tx";
                 case RX -> "log-rx";

@@ -133,6 +133,8 @@ public final class PayloadDecoder {
         int avail = data.length - offset;
 
         out.add(new Decoded("Selection", len + " byte(s) at offset " + offset + " (0x" + Integer.toHexString(offset) + ")"));
+        com.linkscope.core.protocol.ModbusDecoder.decode(data)
+                .ifPresent(frame -> out.add(new Decoded("Modbus (whole payload)", frame.describe())));
         out.add(new Decoded("Hex", PayloadCodec.toHex(sel)));
         out.add(new Decoded("ASCII (escaped)", PayloadCodec.toAscii(sel)));
         out.add(new Decoded("UTF-8", truncate(new String(sel, StandardCharsets.UTF_8))));
