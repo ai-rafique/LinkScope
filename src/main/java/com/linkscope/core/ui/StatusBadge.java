@@ -19,7 +19,17 @@ public class StatusBadge extends HBox {
     private final Label label = new Label();
     private final Tooltip tooltip = new Tooltip();
     private final ObjectProperty<ModuleStatus> status = new SimpleObjectProperty<>(this, "status", ModuleStatus.DISCONNECTED);
+    private final java.util.Map<ModuleStatus, String> labels = new java.util.EnumMap<>(ModuleStatus.class);
     private boolean compact;
+
+    /** Overrides the wording for some statuses (a scanner says "Scanning…" rather than "Connecting…"). */
+    public void setLabels(java.util.Map<ModuleStatus, String> overrides) {
+        labels.clear();
+        if (overrides != null) {
+            labels.putAll(overrides);
+        }
+        apply(status.get());
+    }
 
     public StatusBadge() {
         getStyleClass().add("status-badge");
@@ -78,7 +88,8 @@ public class StatusBadge extends HBox {
                 getStyleClass().add("status-disconnected");
             }
         }
-        label.setText(s.label());
-        tooltip.setText(s.label());
+        String text = labels.getOrDefault(s, s.label());
+        label.setText(text);
+        tooltip.setText(text);
     }
 }

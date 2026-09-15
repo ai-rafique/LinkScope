@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.linkscope.core.ui.StatusBadge?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.linkscope.modules.portscan.PortScanController" styleClass="ls-module">
+    <VBox styleClass="ls-panel">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Local TCP ports" styleClass="ls-panel-title"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <StatusBadge fx:id="statusBadge"/>
+        </HBox>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Interface" styleClass="text-muted" minWidth="72"/>
+            <ComboBox fx:id="addressCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <tooltip><Tooltip text="Address to probe. Loopback also sees services bound to all interfaces (0.0.0.0)."/></tooltip>
+            </ComboBox>
+            <Button fx:id="refreshButton" styleClass="button-icon">
+                <graphic><FontIcon iconLiteral="fth-refresh-cw"/></graphic>
+                <tooltip><Tooltip text="Rescan network interfaces"/></tooltip>
+            </Button>
+            <Label text="Ports" styleClass="text-muted"/>
+            <TextField fx:id="rangeField" text="1-1024" prefWidth="180">
+                <tooltip><Tooltip text="Ranges and lists: 1-1024, 22,80,443, 8000-9000,3306. Up to 1-65535."/></tooltip>
+            </TextField>
+            <Button fx:id="scanButton" text="Scan" styleClass="accent"/>
+        </HBox>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <ProgressBar fx:id="progressBar" prefWidth="240" progress="0"/>
+            <Label fx:id="summaryLabel" styleClass="text-muted"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <ToggleButton fx:id="hideFreeToggle" text="Hide free" selected="true" styleClass="small"/>
+        </HBox>
+    </VBox>
+
+    <TableView fx:id="table" VBox.vgrow="ALWAYS" minHeight="120">
+        <columns>
+            <TableColumn fx:id="portColumn" text="Port" prefWidth="80"/>
+            <TableColumn fx:id="stateColumn" text="State" prefWidth="120"/>
+            <TableColumn fx:id="ownerColumn" text="Process" prefWidth="260"/>
+            <TableColumn fx:id="detailColumn" text="Detail" prefWidth="360"/>
+        </columns>
+    </TableView>
+
+    <Label styleClass="ls-hint" wrapText="true"
+           text="Each port gets a connect and a bind test. Listening = a server accepts connections. In use = bound without a listener (an established connection, for example). Reserved = the OS refuses the bind, such as Windows excluded port ranges or ports below 1024 without root. Free = nothing there."/>
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+</VBox>

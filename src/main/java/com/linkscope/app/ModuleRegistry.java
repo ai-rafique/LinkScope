@@ -22,7 +22,9 @@ public final class ModuleRegistry {
             new ModuleDescriptor("mqtt", "MQTT", "mqtt.fxml", "fth-rss"),
             new ModuleDescriptor("serial", "Serial", "serial.fxml", "fth-cpu"),
             new ModuleDescriptor("http", "HTTP", "http.fxml", "fth-globe"),
-            new ModuleDescriptor("websocket", "WebSocket", "websocket.fxml", "fth-repeat")
+            new ModuleDescriptor("websocket", "WebSocket", "websocket.fxml", "fth-repeat"),
+            new ModuleDescriptor("netscan", "Net Scan", "netscan.fxml", "fth-search"),
+            new ModuleDescriptor("ports", "Ports", "portscan.fxml", "fth-server")
     );
 
     private ModuleRegistry() {

@@ -136,6 +136,7 @@ public class MainController {
 
         StatusBadge badge = new StatusBadge();
         badge.setCompact(true);
+        badge.setLabels(controller.statusLabels());
         badge.statusProperty().bind(controller.statusProperty());
         HBox header = new HBox(6, new FontIcon(d.icon()), new Label(d.title()), badge);
         header.setAlignment(Pos.CENTER_LEFT);

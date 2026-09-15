@@ -24,4 +24,12 @@ public interface ModuleController {
 
     /** Called once when the application closes. */
     void shutdown();
+
+    /**
+     * Optional per-module wording for statuses, e.g. a scanner shows "Scanning…" for
+     * CONNECTING and "Done" for CONNECTED. Empty means the default connection wording.
+     */
+    default Map<ModuleStatus, String> statusLabels() {
+        return Map.of();
+    }
 }
