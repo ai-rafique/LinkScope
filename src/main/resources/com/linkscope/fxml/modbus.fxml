@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.linkscope.core.ui.StatusBadge?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.linkscope.modules.modbus.ModbusController" styleClass="ls-module">
+    <!-- Link -->
+    <VBox styleClass="ls-panel">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Link" styleClass="ls-panel-title"/>
+            <ComboBox fx:id="modeCombo" prefWidth="130">
+                <tooltip><Tooltip text="RTU frames over a serial port, or Modbus TCP over a socket"/></tooltip>
+            </ComboBox>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <StatusBadge fx:id="statusBadge"/>
+        </HBox>
+        <HBox fx:id="serialBox" spacing="8" alignment="CENTER_LEFT">
+            <Label text="Port" styleClass="text-muted" minWidth="-Infinity"/>
+            <ComboBox fx:id="portCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" minWidth="160" promptText="Scanning…"/>
+            <Button fx:id="refreshButton" styleClass="button-icon">
+                <graphic><FontIcon iconLiteral="fth-refresh-cw"/></graphic>
+                <tooltip><Tooltip text="Rescan serial ports"/></tooltip>
+            </Button>
+            <Label text="Baud" styleClass="text-muted" minWidth="-Infinity"/>
+            <ComboBox fx:id="baudCombo" editable="true" prefWidth="110" minWidth="90"/>
+            <Label text="Data" styleClass="text-muted" minWidth="-Infinity"/>
+            <ComboBox fx:id="dataBitsCombo" prefWidth="64" minWidth="60"/>
+            <Label text="Parity" styleClass="text-muted" minWidth="-Infinity"/>
+            <ComboBox fx:id="parityCombo" prefWidth="90">
+                <tooltip><Tooltip text="Modbus RTU default is even parity; many devices use none with two stop bits"/></tooltip>
+            </ComboBox>
+            <Label text="Stop" styleClass="text-muted" minWidth="-Infinity"/>
+            <ComboBox fx:id="stopBitsCombo" prefWidth="64" minWidth="60"/>
+        </HBox>
+        <HBox fx:id="tcpBox" spacing="8" alignment="CENTER_LEFT">
+            <Label text="Host" styleClass="text-muted"/>
+            <TextField fx:id="hostField" text="127.0.0.1" HBox.hgrow="ALWAYS"/>
+            <Label text="Port" styleClass="text-muted"/>
+            <TextField fx:id="tcpPortField" text="502" prefWidth="80"/>
+        </HBox>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button fx:id="openButton" text="Open" styleClass="accent"/>
+        </HBox>
+    </VBox>
+
+    <HBox spacing="16">
+        <!-- CRC -->
+        <VBox styleClass="ls-panel" HBox.hgrow="ALWAYS" minWidth="380">
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="CRC" styleClass="ls-panel-title"/>
+                <ComboBox fx:id="crcPresetCombo" prefWidth="210">
+                    <tooltip><Tooltip text="Algorithm used to verify incoming RTU frames and to sign outgoing ones"/></tooltip>
+                </ComboBox>
+                <ComboBox fx:id="byteOrderCombo" prefWidth="200">
+                    <tooltip><Tooltip text="Which CRC byte goes first on the wire"/></tooltip>
+                </ComboBox>
+            </HBox>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Poly" styleClass="text-muted"/>
+                <TextField fx:id="polyField" prefWidth="70"/>
+                <Label text="Init" styleClass="text-muted"/>
+                <TextField fx:id="initField" prefWidth="70"/>
+                <Label text="Xor-out" styleClass="text-muted"/>
+                <TextField fx:id="xorOutField" prefWidth="70"/>
+                <CheckBox fx:id="reflectCheck" text="Reflected">
+                    <tooltip><Tooltip text="Bit-reflected (LSB-first) algorithm, as Modbus uses. Editing any field switches to Custom parameters."/></tooltip>
+                </CheckBox>
+            </HBox>
+            <TextArea fx:id="tableArea" prefRowCount="3" styleClass="ls-mono" wrapText="true"
+                      promptText="Paste a CRC table here: 256 16-bit entries, or the 256 high-byte + 256 low-byte tables from a Modbus manual (hex or decimal, any separators)">
+                <tooltip><Tooltip text="When a table is pasted it replaces the polynomial; Init, Xor-out and Reflected still apply to a 256-entry table"/></tooltip>
+            </TextArea>
+            <Label fx:id="crcCheckLabel" styleClass="text-muted, small" wrapText="true"/>
+        </VBox>
+
+        <!-- Request -->
+        <VBox styleClass="ls-panel" HBox.hgrow="ALWAYS" minWidth="380">
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Request" styleClass="ls-panel-title"/>
+                <Label text="Unit" styleClass="text-muted"/>
+                <TextField fx:id="unitField" text="1" prefWidth="56">
+                    <tooltip><Tooltip text="Slave / unit id, 1-247 (0 = broadcast)"/></tooltip>
+                </TextField>
+                <ComboBox fx:id="functionCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            </HBox>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Address" styleClass="text-muted"/>
+                <TextField fx:id="addressField" text="0" prefWidth="80">
+                    <tooltip><Tooltip text="Zero-based protocol address (register 40001 is address 0)"/></tooltip>
+                </TextField>
+                <HBox fx:id="quantityBox" spacing="8" alignment="CENTER_LEFT">
+                    <Label text="Quantity" styleClass="text-muted"/>
+                    <TextField fx:id="quantityField" text="10" prefWidth="70"/>
+                </HBox>
+                <HBox fx:id="valuesBox" spacing="8" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                    <Label text="Value(s)" styleClass="text-muted"/>
+                    <TextField fx:id="valuesField" HBox.hgrow="ALWAYS"/>
+                </HBox>
+            </HBox>
+            <HBox fx:id="rawBox" spacing="8" alignment="CENTER_LEFT">
+                <Label text="PDU hex" styleClass="text-muted"/>
+                <TextField fx:id="rawPduField" HBox.hgrow="ALWAYS" promptText="03 00 00 00 0a  (function code + data; CRC or MBAP is added)"/>
+            </HBox>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Button fx:id="sendButton" text="Send" styleClass="accent">
+                    <graphic><FontIcon iconLiteral="fth-send"/></graphic>
+                </Button>
+                <ToggleButton fx:id="pollToggle" text="Poll">
+                    <graphic><FontIcon iconLiteral="fth-repeat"/></graphic>
+                    <tooltip><Tooltip text="Repeat this request at the interval until turned off"/></tooltip>
+                </ToggleButton>
+                <Label text="every" styleClass="text-muted"/>
+                <TextField fx:id="pollIntervalField" text="1000" prefWidth="70"/>
+                <Label text="ms" styleClass="text-muted"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <!-- Exchanges -->
+    <VBox spacing="4" VBox.vgrow="ALWAYS">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Frames" styleClass="ls-section-title"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button fx:id="clearButton" text="Clear" styleClass="small">
+                <graphic><FontIcon iconLiteral="fth-trash-2"/></graphic>
+            </Button>
+        </HBox>
+        <TableView fx:id="table" VBox.vgrow="ALWAYS" minHeight="100">
+            <columns>
+                <TableColumn fx:id="timeColumn" text="Time" prefWidth="96"/>
+                <TableColumn fx:id="dirColumn" text="Dir" prefWidth="44"/>
+                <TableColumn fx:id="unitColumn" text="Unit" prefWidth="48"/>
+                <TableColumn fx:id="functionColumn" text="Function" prefWidth="200"/>
+                <TableColumn fx:id="detailColumn" text="Details" prefWidth="360"/>
+                <TableColumn fx:id="crcColumn" text="CRC" prefWidth="50"/>
+                <TableColumn fx:id="rawColumn" text="Raw" prefWidth="300"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <Label styleClass="ls-hint" wrapText="true"
+           text="Open a serial port for RTU or a TCP endpoint, then send requests from the builder or just listen on a bus. Incoming frames are split on the inter-frame gap, verified with the CRC above and decoded; a wrong CRC is flagged with the value that was expected."/>
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+</VBox>

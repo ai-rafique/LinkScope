@@ -80,18 +80,30 @@ public final class ModbusDecoder {
     }
 
     public static Optional<Frame> decodeRtu(byte[] data) {
-        if (data == null || data.length < 4 || data.length > 256) {
+        return decodeRtu(data, Crc16.STANDARD_MODBUS);
+    }
+
+    /** Tries TCP first, then RTU verified with the given CRC. */
+    public static Optional<Frame> decode(byte[] data, Crc16 crc) {
+        Optional<Frame> tcp = decodeTcp(data);
+        return tcp.isPresent() ? tcp : decodeRtu(data, crc);
+    }
+
+    /** RTU with a custom CRC (parameters or pasted table); the frame must verify. */
+    public static Optional<Frame> decodeRtu(byte[] data, Crc16 crc) {
+        if (data == null || data.length < 4 || data.length > 256 || !crc.verify(data)) {
             return Optional.empty();
         }
-        int expected = crc16(data, 0, data.length - 2);
-        int actual = (data[data.length - 2] & 0xFF) | ((data[data.length - 1] & 0xFF) << 8);
-        if (expected != actual) {
-            return Optional.empty();
-        }
+        return Optional.of(decodeRtuUnchecked(data));
+    }
+
+    /** Decodes an RTU frame without checking its CRC (for showing what a bad-CRC frame was trying to say). */
+    public static Frame decodeRtuUnchecked(byte[] data) {
         int unit = data[0] & 0xFF;
-        byte[] pdu = new byte[data.length - 3];
-        System.arraycopy(data, 1, pdu, 0, pdu.length);
-        return Optional.of(build(Transport.RTU, null, unit, pdu));
+        int pduLength = Math.max(1, data.length - 3);
+        byte[] pdu = new byte[pduLength];
+        System.arraycopy(data, 1, pdu, 0, Math.min(pduLength, data.length - 1));
+        return build(Transport.RTU, null, unit, pdu);
     }
 
     public static Optional<Frame> decodeTcp(byte[] data) {

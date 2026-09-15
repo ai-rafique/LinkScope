@@ -24,6 +24,7 @@ public final class ModuleRegistry {
             new ModuleDescriptor("kafka", "Kafka", "Brokers", "kafka.fxml", "fth-layers"),
             new ModuleDescriptor("mqtt", "MQTT", "Brokers", "mqtt.fxml", "fth-rss"),
             new ModuleDescriptor("serial", "Serial", "Devices", "serial.fxml", "fth-cpu"),
+            new ModuleDescriptor("modbus", "Modbus", "Devices", "modbus.fxml", "fth-sliders"),
             new ModuleDescriptor("http", "HTTP", "Web", "http.fxml", "fth-globe"),
             new ModuleDescriptor("websocket", "WebSocket", "Web", "websocket.fxml", "fth-repeat"),
             new ModuleDescriptor("netscan", "Net Scan", "Tools", "netscan.fxml", "fth-search"),
