@@ -95,6 +95,7 @@ tasks.register<Exec>("innoSetup") {
     group = "distribution"
     description = "Builds a Windows setup.exe from the jpackage app image with Inno Setup."
     dependsOn("jpackageImage")
+    mustRunAfter("jpackage")
     onlyIf { org.gradle.internal.os.OperatingSystem.current().isWindows }
     inputs.dir(appImageDir)
     inputs.file(layout.projectDirectory.file("packaging/linkscope.iss"))
@@ -124,6 +125,7 @@ tasks.register<Zip>("appImageZip") {
     group = "distribution"
     description = "Zips the jpackage app image as a portable Windows build."
     dependsOn("jpackageImage")
+    mustRunAfter("jpackage")
     onlyIf { org.gradle.internal.os.OperatingSystem.current().isWindows }
     from(appImageDir)
     into("LinkScope")
@@ -137,6 +139,7 @@ tasks.register<Tar>("appImageTar") {
     group = "distribution"
     description = "Tars the jpackage app image as a portable Linux build."
     dependsOn("jpackageImage")
+    mustRunAfter("jpackage")
     onlyIf { org.gradle.internal.os.OperatingSystem.current().isLinux }
     from(appImageDir)
     into("LinkScope")
