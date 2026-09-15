@@ -40,6 +40,9 @@ dependencies {
     implementation("io.nats:jnats:2.26.3")
     implementation("com.fazecast:jSerialComm:2.11.4")
 
+    // Transports (v2)
+    implementation("org.apache.kafka:kafka-clients:4.3.0")
+
     // Presets / config
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
     implementation("io.github.cdimascio:dotenv-java:3.2.0")

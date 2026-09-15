@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Arrays;
 
 import static com.linkscope.TestSupport.awaitTrue;
@@ -23,6 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * SKIP_INTEGRATION is set or the broker from the Docker Compose stack is not reachable.
  */
 public abstract class PubSubModuleContractTest {
+    /** Kafka group joins can take several seconds; NATS is instant. */
+    protected static final Duration SUBSCRIBE_TIMEOUT = Duration.ofSeconds(20);
+    protected static final Duration DELIVERY_TIMEOUT = Duration.ofSeconds(10);
+
     protected PubSubModule module;
 
     protected abstract PubSubModule createModule();
@@ -59,12 +64,12 @@ public abstract class PubSubModuleContractTest {
         String topic = testTopic();
         module.subscribe(topic);
         awaitTrue("subscription listed", () -> module.subscriptions().contains(topic));
-        awaitTrue("subscribe acknowledged", () -> loggedInfoContaining("Subscribed to " + topic));
+        awaitTrue("subscribe acknowledged", SUBSCRIBE_TIMEOUT, () -> loggedInfoContaining("Subscribed to " + topic));
 
         byte[] payload = ("hello " + topic).getBytes(StandardCharsets.UTF_8);
         module.publish(topic, payload);
-        awaitTrue("TX logged", () -> logged(module.moduleName(), LogEntry.Kind.TX, payload));
-        awaitTrue("message received", () -> module.messages().stream()
+        awaitTrue("TX logged", DELIVERY_TIMEOUT, () -> loggedTxContaining(payload));
+        awaitTrue("message received", DELIVERY_TIMEOUT, () -> module.messages().stream()
                 .anyMatch(m -> m.topic().equals(topic) && Arrays.equals(m.payload(), payload)));
         awaitTrue("RX logged", () -> logged(module.moduleName(), LogEntry.Kind.RX, payload));
         assertEquals(1, module.messages().size());
@@ -74,16 +79,21 @@ public abstract class PubSubModuleContractTest {
     void unsubscribeStopsDelivery() throws InterruptedException {
         String topic = testTopic();
         module.subscribe(topic);
-        awaitTrue("subscribe acknowledged", () -> loggedInfoContaining("Subscribed to " + topic));
+        awaitTrue("subscribe acknowledged", SUBSCRIBE_TIMEOUT, () -> loggedInfoContaining("Subscribed to " + topic));
         module.unsubscribe(topic);
         awaitTrue("unsubscribed", () -> !module.subscriptions().contains(topic)
                 && loggedInfoContaining("Unsubscribed from " + topic));
 
         byte[] payload = "should not arrive".getBytes(StandardCharsets.UTF_8);
         module.publish(topic, payload);
-        awaitTrue("TX logged", () -> logged(module.moduleName(), LogEntry.Kind.TX, payload));
-        Thread.sleep(300);
+        awaitTrue("TX logged", DELIVERY_TIMEOUT, () -> loggedTxContaining(payload));
+        Thread.sleep(1000);
         assertTrue(module.messages().isEmpty(), "no message after unsubscribe");
+    }
+
+    /** TX notes may carry broker metadata (Kafka partition/offset), so match on payload only. */
+    private boolean loggedTxContaining(byte[] payload) {
+        return logged(module.moduleName(), LogEntry.Kind.TX, payload);
     }
 
     private static boolean loggedInfoContaining(String text) {

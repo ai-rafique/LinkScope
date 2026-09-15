@@ -18,6 +18,7 @@ public final class ModuleRegistry {
             new ModuleDescriptor("tcp", "TCP", "tcp.fxml", "fth-link"),
             new ModuleDescriptor("multicast", "Multicast", "multicast.fxml", "fth-radio"),
             new ModuleDescriptor("nats", "NATS", "nats.fxml", "fth-message-circle"),
+            new ModuleDescriptor("kafka", "Kafka", "kafka.fxml", "fth-layers"),
             new ModuleDescriptor("serial", "Serial", "serial.fxml", "fth-cpu")
     );
 

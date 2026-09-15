@@ -11,6 +11,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
@@ -44,6 +45,7 @@ public class PubSubPanelController {
     @FXML private TextField brokerField;
     @FXML private Button connectButton;
     @FXML private StatusBadge statusBadge;
+    @FXML private HBox optionsRow;
 
     @FXML private Label subscriptionsTitle;
     @FXML private TextField subscribeField;
@@ -127,6 +129,23 @@ public class PubSubPanelController {
         });
         module.statusProperty().addListener((obs, old, now) -> updateConnectButton(now));
         updateConnectButton(module.statusProperty().get());
+    }
+
+    /**
+     * Adds a broker-specific control (Kafka group id, MQTT QoS, ...) to the options row
+     * under the broker field, keeping the shared look. Disabled while connected unless
+     * {@code liveEditable} is set.
+     */
+    public void addOption(String label, Node field, boolean liveEditable) {
+        Label l = new Label(label);
+        l.getStyleClass().add("text-muted");
+        optionsRow.getChildren().addAll(l, field);
+        optionsRow.setVisible(true);
+        optionsRow.setManaged(true);
+        if (!liveEditable && service != null) {
+            field.disableProperty().bind(Bindings.createBooleanBinding(
+                    () -> service.statusProperty().get().isActive(), service.statusProperty()));
+        }
     }
 
     private void toggleConnect() {
