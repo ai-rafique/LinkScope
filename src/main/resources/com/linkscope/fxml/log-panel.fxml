@@ -4,10 +4,12 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
@@ -28,20 +30,39 @@
             <graphic><FontIcon iconLiteral="fth-clock"/></graphic>
             <tooltip><Tooltip text="Show [HH:mm:ss.SSS] timestamps"/></tooltip>
         </ToggleButton>
+        <ToggleButton fx:id="deltaToggle" text="Δt">
+            <graphic><FontIcon iconLiteral="fth-watch"/></graphic>
+            <tooltip><Tooltip text="Show the time since the previous line instead of the clock"/></tooltip>
+        </ToggleButton>
         <ToggleButton fx:id="autoscrollToggle" text="Follow" selected="true">
             <graphic><FontIcon iconLiteral="fth-arrow-down-circle"/></graphic>
             <tooltip><Tooltip text="Auto-scroll to the newest line. Turn off to pause while reading."/></tooltip>
         </ToggleButton>
-        <TextField fx:id="filterField" promptText="Filter: module, TX/RX, or text" prefWidth="220"/>
+        <TextField fx:id="filterField" promptText="Filter text" prefWidth="180"/>
         <Pane HBox.hgrow="ALWAYS"/>
+        <ToggleButton fx:id="inspectToggle" text="Inspect">
+            <graphic><FontIcon iconLiteral="fth-eye"/></graphic>
+            <tooltip><Tooltip text="Open the payload inspector for the selected line (Ctrl+I)"/></tooltip>
+        </ToggleButton>
         <Button fx:id="clearButton" text="Clear">
             <graphic><FontIcon iconLiteral="fth-trash-2"/></graphic>
             <tooltip><Tooltip text="Clear the log (Ctrl+L)"/></tooltip>
         </Button>
         <Button fx:id="saveButton" text="Save…">
             <graphic><FontIcon iconLiteral="fth-download"/></graphic>
-            <tooltip><Tooltip text="Save the visible lines to a file, using the current hex/time settings"/></tooltip>
+            <tooltip><Tooltip text="Save the visible lines as text (current hex/time settings) or CSV"/></tooltip>
         </Button>
     </ToolBar>
-    <ListView fx:id="list" VBox.vgrow="ALWAYS" styleClass="ls-log-list"/>
+    <!-- Kind chips are fixed; a chip per module tag is added as modules first log. -->
+    <FlowPane fx:id="chipRow" hgap="6" vgap="4" styleClass="ls-chip-row">
+        <ToggleButton fx:id="txChip" text="TX" selected="true" styleClass="ls-chip, ls-chip-tx, small"/>
+        <ToggleButton fx:id="rxChip" text="RX" selected="true" styleClass="ls-chip, ls-chip-rx, small"/>
+        <ToggleButton fx:id="infoChip" text="INFO" selected="true" styleClass="ls-chip, small"/>
+        <ToggleButton fx:id="errorChip" text="ERROR" selected="true" styleClass="ls-chip, ls-chip-error, small"/>
+        <Separator orientation="VERTICAL"/>
+    </FlowPane>
+    <SplitPane fx:id="logSplit" orientation="HORIZONTAL" VBox.vgrow="ALWAYS">
+        <ListView fx:id="list" styleClass="ls-log-list"/>
+        <fx:include fx:id="inspector" source="inspector.fxml"/>
+    </SplitPane>
 </VBox>

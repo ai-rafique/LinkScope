@@ -44,6 +44,11 @@ dependencies {
     implementation("org.apache.kafka:kafka-clients:4.3.0")
     implementation("org.eclipse.paho:org.eclipse.paho.mqttv5.client:1.2.5")
 
+    // Logging: kafka-clients and Paho log via SLF4J; LinkScope ships its own provider
+    // (core/slf4j) that forwards WARN/ERROR into the app log. Already transitive, pinned here
+    // so the provider's REQUESTED_API_VERSION stays in step with the API on the classpath.
+    implementation("org.slf4j:slf4j-api:2.0.17")
+
     // Presets / config
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
     implementation("io.github.cdimascio:dotenv-java:3.2.0")
@@ -72,7 +77,10 @@ runtime {
     options.set(listOf("--strip-debug", "--compress", "zip-6", "--no-header-files", "--no-man-pages"))
     // jdeps misses modules that are only reached reflectively or via service loaders.
     additive.set(true)
-    modules.set(listOf("java.naming", "java.management", "jdk.crypto.ec", "jdk.unsupported"))
+    // java.net.http (HTTP/WebSocket modules) is not reported by jdeps here; jdk.charsets keeps
+    // exotic serial-device encodings available; the rest cover JNDI/JMX/TLS used by the broker clients.
+    modules.set(listOf("java.net.http", "java.naming", "java.management", "java.security.sasl",
+            "jdk.charsets", "jdk.crypto.ec", "jdk.unsupported"))
 
     launcher {
         noConsole = true

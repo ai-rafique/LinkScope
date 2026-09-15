@@ -1,14 +1,18 @@
 package com.linkscope.app;
 
 import com.linkscope.core.LogEntry;
+import com.linkscope.core.LogEntry.Kind;
+import com.linkscope.core.LogEntry.TimeMode;
 import com.linkscope.core.LogSink;
 import com.linkscope.core.PayloadCodec;
+import com.linkscope.core.ui.InspectorController;
 import com.linkscope.core.ui.Toasts;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -16,10 +20,13 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.FlowPane;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -27,14 +34,21 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 
 /**
- * The shared log/console panel every module writes into. Hex/ASCII, timestamp and
- * follow toggles apply to all lines; filter matches module tag or rendered text.
+ * The shared log/console panel every module writes into. Hex/ASCII and timestamp modes
+ * apply to all lines; module and kind chips plus a text filter narrow the view; a
+ * selected TX/RX line can be opened in the payload inspector.
  */
 public class LogPanelController {
     private static final String LOG_TAG = "LOG";
@@ -42,14 +56,27 @@ public class LogPanelController {
     @FXML private Label countLabel;
     @FXML private ToggleButton hexToggle;
     @FXML private ToggleButton timestampToggle;
+    @FXML private ToggleButton deltaToggle;
     @FXML private ToggleButton autoscrollToggle;
     @FXML private TextField filterField;
+    @FXML private ToggleButton inspectToggle;
     @FXML private Button clearButton;
     @FXML private Button saveButton;
+    @FXML private FlowPane chipRow;
+    @FXML private ToggleButton txChip;
+    @FXML private ToggleButton rxChip;
+    @FXML private ToggleButton infoChip;
+    @FXML private ToggleButton errorChip;
+    @FXML private SplitPane logSplit;
     @FXML private ListView<LogEntry> list;
+    @FXML private Node inspector;
+    @FXML private InspectorController inspectorController;
 
     private final ObservableList<LogEntry> all = LogSink.get().entries();
     private final FilteredList<LogEntry> filtered = new FilteredList<>(all);
+    private final Map<Kind, ToggleButton> kindChips = new EnumMap<>(Kind.class);
+    private final Map<String, ToggleButton> moduleChips = new LinkedHashMap<>();
+    private final Set<String> hiddenModules = new HashSet<>();
 
     @FXML
     private void initialize() {
@@ -59,11 +86,42 @@ public class LogPanelController {
         list.setPlaceholder(placeholder());
         list.setContextMenu(contextMenu());
 
+        kindChips.put(Kind.TX, txChip);
+        kindChips.put(Kind.RX, rxChip);
+        kindChips.put(Kind.INFO, infoChip);
+        kindChips.put(Kind.ERROR, errorChip);
+        for (ToggleButton chip : kindChips.values()) {
+            chip.selectedProperty().addListener((obs, old, now) -> applyFilter());
+        }
+        for (LogEntry e : all) {
+            ensureModuleChip(e.module());
+        }
+        all.addListener((ListChangeListener<LogEntry>) change -> {
+            while (change.next()) {
+                if (change.wasAdded()) {
+                    for (LogEntry e : change.getAddedSubList()) {
+                        ensureModuleChip(e.module());
+                    }
+                }
+            }
+        });
+
         hexToggle.selectedProperty().addListener((obs, old, now) -> {
             list.refresh();
             applyFilter();
         });
-        timestampToggle.selectedProperty().addListener((obs, old, now) -> list.refresh());
+        timestampToggle.selectedProperty().addListener((obs, old, now) -> {
+            if (now) {
+                deltaToggle.setSelected(false);
+            }
+            list.refresh();
+        });
+        deltaToggle.selectedProperty().addListener((obs, old, now) -> {
+            if (now) {
+                timestampToggle.setSelected(false);
+            }
+            list.refresh();
+        });
         filterField.textProperty().addListener((obs, old, now) -> applyFilter());
 
         countLabel.textProperty().bind(Bindings.createStringBinding(
@@ -78,12 +136,21 @@ public class LogPanelController {
             }
         });
 
+        inspectToggle.selectedProperty().addListener((obs, old, shown) -> setInspectorVisible(shown));
+        setInspectorVisible(false);
+        list.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> {
+            if (inspectToggle.isSelected()) {
+                inspectorController.show(now);
+            }
+        });
+
         clearButton.setOnAction(e -> clear());
         saveButton.setOnAction(e -> save());
     }
 
     public void clear() {
         LogSink.get().clear();
+        inspectorController.clear();
     }
 
     public boolean isHex() {
@@ -98,40 +165,98 @@ public class LogPanelController {
         hexToggle.setSelected(!hexToggle.isSelected());
     }
 
+    /** Ctrl+I: show the inspector for the selected line, or hide it when already shown. */
+    public void toggleInspector() {
+        inspectToggle.setSelected(!inspectToggle.isSelected());
+    }
+
+    private TimeMode timeMode() {
+        return deltaToggle.isSelected() ? TimeMode.DELTA : timestampToggle.isSelected() ? TimeMode.ABSOLUTE : TimeMode.NONE;
+    }
+
+    private void setInspectorVisible(boolean shown) {
+        if (shown) {
+            if (!logSplit.getItems().contains(inspector)) {
+                logSplit.getItems().add(inspector);
+                logSplit.setDividerPositions(0.55);
+            }
+            inspectorController.show(list.getSelectionModel().getSelectedItem());
+        } else {
+            logSplit.getItems().remove(inspector);
+        }
+    }
+
+    // --- filtering --------------------------------------------------------------------
+
+    private void ensureModuleChip(String module) {
+        if (module == null || moduleChips.containsKey(module)) {
+            return;
+        }
+        ToggleButton chip = new ToggleButton(module);
+        chip.setSelected(true);
+        chip.getStyleClass().addAll("ls-chip", "small");
+        chip.setTooltip(new Tooltip("Show / hide lines from " + module));
+        chip.selectedProperty().addListener((obs, old, now) -> {
+            if (now) {
+                hiddenModules.remove(module);
+            } else {
+                hiddenModules.add(module);
+            }
+            applyFilter();
+        });
+        moduleChips.put(module, chip);
+        chipRow.getChildren().add(chip);
+    }
+
+    private void applyFilter() {
+        String q = filterField.getText() == null ? "" : filterField.getText().trim().toLowerCase();
+        boolean hex = isHex();
+        Set<Kind> kinds = new HashSet<>();
+        kindChips.forEach((kind, chip) -> {
+            if (chip.isSelected()) {
+                kinds.add(kind);
+            }
+        });
+        Set<String> hidden = new HashSet<>(hiddenModules);
+        boolean allKinds = kinds.size() == Kind.values().length;
+        if (q.isEmpty() && allKinds && hidden.isEmpty()) {
+            filtered.setPredicate(null);
+            return;
+        }
+        filtered.setPredicate(e -> kinds.contains(e.kind())
+                && !hidden.contains(e.module())
+                && (q.isEmpty() || e.module().toLowerCase().contains(q) || e.format(hex, false).toLowerCase().contains(q)));
+    }
+
+    // --- misc UI ----------------------------------------------------------------------
+
     private Label placeholder() {
-        Label l = new Label("Nothing logged yet. Start a module above — every TX/RX line from every tab lands here.\n"
-                + "Ctrl+L clears, Ctrl+H toggles hex.");
+        Label l = new Label("Nothing logged yet. Start a module above — every TX/RX line from every module lands here.\n"
+                + "Ctrl+L clears, Ctrl+H toggles hex, Ctrl+I opens the inspector for the selected line.");
         l.getStyleClass().add("ls-hint");
         l.setWrapText(true);
         return l;
     }
 
-    private void applyFilter() {
-        String q = filterField.getText() == null ? "" : filterField.getText().trim().toLowerCase();
-        if (q.isEmpty()) {
-            filtered.setPredicate(null);
-            return;
-        }
-        boolean hex = isHex();
-        filtered.setPredicate(e -> e.module().toLowerCase().contains(q)
-                || e.kind().name().toLowerCase().equals(q)
-                || e.format(hex, false).toLowerCase().contains(q));
-    }
-
     private ContextMenu contextMenu() {
+        MenuItem inspect = new MenuItem("Inspect payload");
+        inspect.setOnAction(e -> inspectToggle.setSelected(true));
         MenuItem copyLines = new MenuItem("Copy line(s)");
         copyLines.setOnAction(e -> copy(selectedLines()));
         MenuItem copyHex = new MenuItem("Copy payload as hex");
         copyHex.setOnAction(e -> copy(selectedPayloads(true)));
         MenuItem copyAscii = new MenuItem("Copy payload as ASCII");
         copyAscii.setOnAction(e -> copy(selectedPayloads(false)));
-        return new ContextMenu(copyLines, copyHex, copyAscii);
+        return new ContextMenu(inspect, copyLines, copyHex, copyAscii);
     }
 
     private String selectedLines() {
         StringBuilder sb = new StringBuilder();
+        TimeMode mode = timeMode();
         for (LogEntry e : list.getSelectionModel().getSelectedItems()) {
-            sb.append(e.format(isHex(), timestampToggle.isSelected())).append(System.lineSeparator());
+            int idx = filtered.indexOf(e);
+            LocalTime prev = idx > 0 ? filtered.get(idx - 1).time() : null;
+            sb.append(e.format(isHex(), mode, prev)).append(System.lineSeparator());
         }
         return sb.toString();
     }
@@ -158,24 +283,35 @@ public class LogPanelController {
     private void save() {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Save log");
-        chooser.setInitialFileName("linkscope-" + DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now()) + ".log");
-        chooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Log files", "*.log", "*.txt"),
-                new FileChooser.ExtensionFilter("All files", "*.*"));
+        String stamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
+        chooser.setInitialFileName("linkscope-" + stamp + ".log");
+        FileChooser.ExtensionFilter logFilter = new FileChooser.ExtensionFilter("Log text (*.log, *.txt)", "*.log", "*.txt");
+        FileChooser.ExtensionFilter csvFilter = new FileChooser.ExtensionFilter("CSV (*.csv)", "*.csv");
+        chooser.getExtensionFilters().addAll(logFilter, csvFilter, new FileChooser.ExtensionFilter("All files", "*.*"));
         File target = chooser.showSaveDialog(list.getScene().getWindow());
         if (target == null) {
             return;
         }
+        boolean csv = chooser.getSelectedExtensionFilter() == csvFilter || target.getName().toLowerCase().endsWith(".csv");
         boolean hex = isHex();
-        boolean ts = timestampToggle.isSelected();
-        List<String> lines = new ArrayList<>(filtered.size());
-        for (LogEntry e : filtered) {
-            lines.add(e.format(hex, ts));
+        TimeMode mode = timeMode();
+        List<String> lines = new ArrayList<>(filtered.size() + 1);
+        if (csv) {
+            lines.add(LogEntry.CSV_HEADER);
+            for (LogEntry e : filtered) {
+                lines.add(e.toCsvRow());
+            }
+        } else {
+            LocalTime prev = null;
+            for (LogEntry e : filtered) {
+                lines.add(e.format(hex, mode, prev));
+                prev = e.time();
+            }
         }
         Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
             try {
                 Files.write(target.toPath(), lines, StandardCharsets.UTF_8);
-                LogSink.get().info(LOG_TAG, "Saved " + lines.size() + " lines to " + target);
+                LogSink.get().info(LOG_TAG, "Saved " + (csv ? lines.size() - 1 : lines.size()) + " lines to " + target);
                 Toasts.success("Log saved: " + target.getName());
             } catch (IOException ex) {
                 LogSink.get().error(LOG_TAG, "Could not save log to " + target, ex);
@@ -192,7 +328,14 @@ public class LogPanelController {
                 setText(null);
                 return;
             }
-            setText(item.format(isHex(), timestampToggle.isSelected()));
+            LocalTime prev = null;
+            if (deltaToggle.isSelected()) {
+                int idx = getIndex();
+                if (idx > 0 && idx - 1 < filtered.size()) {
+                    prev = filtered.get(idx - 1).time();
+                }
+            }
+            setText(item.format(isHex(), timeMode(), prev));
             getStyleClass().add(switch (item.kind()) {
                 case TX -> "log-tx";
                 case RX -> "log-rx";

@@ -233,6 +233,47 @@
     -fx-text-fill: -color-fg-emphasis;
 }
 
+/* --- log filter chips ------------------------------------------------------- */
+
+.ls-chip-row {
+    -fx-padding: 4px 8px;
+    -fx-background-color: -color-bg-subtle;
+    -fx-border-color: transparent transparent -color-border-default transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.ls-chip {
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-padding: 2px 10px;
+    -fx-font-size: 11px;
+    -fx-font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", "DejaVu Sans Mono", "Menlo", monospace;
+}
+
+.ls-chip:selected.ls-chip-tx {
+    -fx-text-fill: -color-accent-fg;
+}
+
+.ls-chip:selected.ls-chip-rx {
+    -fx-text-fill: -color-success-fg;
+}
+
+.ls-chip:selected.ls-chip-error {
+    -fx-text-fill: -color-danger-fg;
+}
+
+/* --- payload inspector ------------------------------------------------------ */
+
+.ls-inspector {
+    -fx-padding: 8px;
+    -fx-background-color: -color-bg-default;
+}
+
+.ls-inspector .table-view .table-cell {
+    -fx-font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", "DejaVu Sans Mono", "Menlo", monospace;
+    -fx-font-size: 12px;
+}
+
 /* --- quick switch popup (Ctrl+K) -------------------------------------------- */
 
 .quick-switch {

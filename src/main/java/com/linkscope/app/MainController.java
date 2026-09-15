@@ -399,6 +399,8 @@ public class MainController {
                 () -> logPanelController.clear());
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN),
                 () -> logPanelController.toggleHex());
+        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.I, KeyCombination.SHORTCUT_DOWN),
+                () -> logPanelController.toggleInspector());
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN),
                 () -> quickSwitch.show(scene.getWindow()));
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN),
