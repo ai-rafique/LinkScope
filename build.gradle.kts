@@ -71,6 +71,65 @@ tasks.test {
     environment("SKIP_INTEGRATION", System.getenv("SKIP_INTEGRATION") ?: "")
 }
 
+// --- Windows distribution without WiX: Inno Setup installer + portable zip -------------------
+// `./gradlew innoSetup` -> build/installer/LinkScope-<version>-setup.exe (needs Inno Setup 6;
+// looked up via INNO_SETUP_HOME, the default install folders, then PATH).
+// `./gradlew appImageZip` -> build/installer/LinkScope-<version>-windows-portable.zip (no tools needed).
+
+fun findIscc(): File? {
+    val candidates = listOfNotNull(
+        System.getenv("INNO_SETUP_HOME")?.let { File(it, "ISCC.exe") },
+        File(System.getenv("ProgramFiles(x86)") ?: "C:/Program Files (x86)", "Inno Setup 6/ISCC.exe"),
+        File(System.getenv("ProgramFiles") ?: "C:/Program Files", "Inno Setup 6/ISCC.exe"),
+        System.getenv("LOCALAPPDATA")?.let { File(it, "Programs/Inno Setup 6/ISCC.exe") }
+    )
+    val onPath = (System.getenv("PATH") ?: "").split(File.pathSeparator).map { File(it, "ISCC.exe") }
+    return (candidates + onPath).firstOrNull { it.isFile }
+}
+
+val distVersion = project.version.toString().substringBefore("-")
+val appImageDir = layout.buildDirectory.dir("jpackage/LinkScope")
+val installerDir = layout.buildDirectory.dir("installer")
+
+tasks.register<Exec>("innoSetup") {
+    group = "distribution"
+    description = "Builds a Windows setup.exe from the jpackage app image with Inno Setup."
+    dependsOn("jpackageImage")
+    onlyIf { org.gradle.internal.os.OperatingSystem.current().isWindows }
+    inputs.dir(appImageDir)
+    inputs.file(layout.projectDirectory.file("packaging/linkscope.iss"))
+    inputs.file(layout.projectDirectory.file("packaging/linkscope.ico"))
+    outputs.file(installerDir.map { it.file("LinkScope-$distVersion-setup.exe") })
+    val iscc = findIscc()
+    executable = iscc?.absolutePath ?: "ISCC.exe"
+    args(
+        "/Q",
+        "/DAppVersion=$distVersion",
+        "/DSourceDir=${appImageDir.get().asFile.absolutePath}",
+        "/DOutputDir=${installerDir.get().asFile.absolutePath}",
+        layout.projectDirectory.file("packaging/linkscope.iss").asFile.absolutePath
+    )
+    doFirst {
+        if (iscc == null) {
+            throw GradleException("Inno Setup 6 not found. Install it from https://jrsoftware.org/isinfo.php or set INNO_SETUP_HOME to its folder.")
+        }
+        installerDir.get().asFile.mkdirs()
+    }
+    doLast {
+        logger.lifecycle("Installer: ${installerDir.get().asFile}/LinkScope-$distVersion-setup.exe")
+    }
+}
+
+tasks.register<Zip>("appImageZip") {
+    group = "distribution"
+    description = "Zips the jpackage app image as a portable Windows build."
+    dependsOn("jpackageImage")
+    from(appImageDir)
+    into("LinkScope")
+    archiveFileName.set("LinkScope-$distVersion-windows-portable.zip")
+    destinationDirectory.set(installerDir)
+}
+
 // badass-runtime: trimmed jlink image from the jdeps-suggested JDK module list,
 // then jpackage in classpath mode. No module-info.java anywhere (see CLAUDE.md §5).
 runtime {

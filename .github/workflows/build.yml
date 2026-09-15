@@ -55,13 +55,12 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      # jpackageImage builds the trimmed runtime + launcher without needing WiX;
-      # the MSI (./gradlew jpackage) needs the WiX toolset and is left to a release workflow.
-      - name: Build app image
-        run: ./gradlew jpackageImage --no-daemon --console=plain
+      # Inno Setup 6 is preinstalled on the windows-latest runner image; jpackageImage runs first.
+      - name: Build installer and portable zip
+        run: ./gradlew innoSetup appImageZip --no-daemon --console=plain
 
-      - name: Upload app image
+      - name: Upload installer and portable zip
         uses: actions/upload-artifact@v4
         with:
-          name: LinkScope-windows-app-image
-          path: build/jpackage/LinkScope
+          name: LinkScope-windows
+          path: build/installer/*
