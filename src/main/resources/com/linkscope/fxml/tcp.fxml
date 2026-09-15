@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.linkscope.core.ui.StatusBadge?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<!-- Dual mode: client and server panels run simultaneously; both log to the shared panel as TCP/CLIENT and TCP/SERVER. -->
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.linkscope.modules.tcp.TcpController" styleClass="ls-module">
+    <HBox spacing="16">
+        <!-- Client -->
+        <VBox styleClass="ls-panel" HBox.hgrow="ALWAYS" minWidth="360">
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Client" styleClass="ls-panel-title"/>
+                <Label text="connect out" styleClass="text-muted, small"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <StatusBadge fx:id="clientStatus"/>
+            </HBox>
+            <GridPane styleClass="ls-form">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="72"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+                <Label text="Host" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="clientHostField" text="127.0.0.1" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                <Label text="Port" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <TextField fx:id="clientPortField" text="5000" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <CheckBox fx:id="autoReconnectCheck" text="Auto-reconnect" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                    <tooltip><Tooltip text="Retry every 2 s after the connection drops or fails, until you press Disconnect"/></tooltip>
+                </CheckBox>
+            </GridPane>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Button fx:id="connectButton" text="Connect" styleClass="accent"/>
+            </HBox>
+            <fx:include fx:id="clientSendBar" source="send-bar.fxml"/>
+        </VBox>
+
+        <!-- Server -->
+        <VBox styleClass="ls-panel" HBox.hgrow="ALWAYS" minWidth="360">
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Server" styleClass="ls-panel-title"/>
+                <Label text="listen for clients" styleClass="text-muted, small"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <StatusBadge fx:id="serverStatus"/>
+            </HBox>
+            <GridPane styleClass="ls-form">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="72"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+                <Label text="Bind" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="serverBindField" text="0.0.0.0" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                    <tooltip><Tooltip text="Local interface to listen on. 0.0.0.0 = all interfaces."/></tooltip>
+                </TextField>
+                <Label text="Port" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <TextField fx:id="serverPortField" text="5000" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                    <tooltip><Tooltip text="Port to listen on. 0 picks a free port (shown in the log)."/></tooltip>
+                </TextField>
+                <Label text="Send to" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <HBox spacing="8" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                    <ComboBox fx:id="clientsCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                        <tooltip><Tooltip text="Which connected client receives the payload; 'All clients' broadcasts"/></tooltip>
+                    </ComboBox>
+                    <Button fx:id="kickButton" styleClass="button-icon">
+                        <graphic><FontIcon iconLiteral="fth-user-x"/></graphic>
+                        <tooltip><Tooltip text="Disconnect the selected client (or all)"/></tooltip>
+                    </Button>
+                </HBox>
+            </GridPane>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Button fx:id="listenButton" text="Listen" styleClass="accent"/>
+            </HBox>
+            <fx:include fx:id="serverSendBar" source="send-bar.fxml"/>
+        </VBox>
+    </HBox>
+
+    <Label styleClass="ls-hint" wrapText="true"
+           text="Both halves run at once. Quick loopback test: press Listen, then Connect — the client connects to your own server, and each side's Send shows up as RX on the other."/>
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+</VBox>

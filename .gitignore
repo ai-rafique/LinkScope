@@ -1,0 +1,42 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+out/
+
+# JDK / packaging output
+*.jlink/
+installer/
+
+# Secrets / local config — never commit real credentials
+.env
+.env.local
+*.env
+!.env.example
+
+# Presets that may contain locally-resolved values
+presets/local/
+*.local.json
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# --- Claude Code / AI tooling: local state, never committed ---
+.claude/
+.claude/settings.local.json
+.mcp.json
+CLAUDE.md
+CLAUDE.local.md
+.clinerules/
+
+# Local broker stack — kept out of history on purpose
+docker-compose.yml
+mosquitto.conf
+mosquitto/

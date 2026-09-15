@@ -1,0 +1,160 @@
+/* LinkScope shared styles. 8px spacing unit; type scale 12/14/16/20/24 (see CLAUDE.md §4).
+   Colors come from AtlantaFX looked-up colors so light/dark switching needs no overrides here. */
+
+.root {
+    -ls-space-1: 8px;
+    -ls-space-2: 16px;
+    -ls-space-3: 24px;
+}
+
+/* --- shell ------------------------------------------------------------------ */
+
+.ls-brand {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.ls-toolbar {
+    -fx-padding: 6px 12px;
+}
+
+.ls-tabs .tab-header-area {
+    -fx-padding: 4px 8px 0 8px;
+}
+
+.ls-tabs .tab {
+    -fx-padding: 6px 12px;
+}
+
+.ls-section-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* --- module panels ---------------------------------------------------------- */
+
+.ls-module {
+    -fx-padding: 16px;
+    -fx-spacing: 16px;
+}
+
+.ls-panel {
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 8px;
+    -fx-border-color: -color-border-default;
+    -fx-border-radius: 8px;
+    -fx-padding: 16px;
+    -fx-spacing: 12px;
+}
+
+.ls-panel-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.ls-form {
+    -fx-hgap: 8px;
+    -fx-vgap: 8px;
+}
+
+.ls-form .label {
+    -fx-text-fill: -color-fg-muted;
+}
+
+.ls-hint {
+    -fx-text-fill: -color-fg-muted;
+    -fx-font-size: 12px;
+    -fx-wrap-text: true;
+}
+
+.send-bar {
+    -fx-padding: 0;
+}
+
+/* --- status badge (icon shape + text; never color alone) -------------------- */
+
+.status-badge .status-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -color-fg-muted;
+}
+
+.status-badge > .label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.status-badge.status-connected .status-icon {
+    -fx-icon-color: -color-success-fg;
+}
+
+.status-badge.status-connected > .label {
+    -fx-text-fill: -color-success-fg;
+}
+
+.status-badge.status-connecting .status-icon {
+    -fx-icon-color: -color-warning-fg;
+}
+
+.status-badge.status-connecting > .label {
+    -fx-text-fill: -color-warning-fg;
+}
+
+.status-badge.status-error .status-icon {
+    -fx-icon-color: -color-danger-fg;
+}
+
+.status-badge.status-error > .label {
+    -fx-text-fill: -color-danger-fg;
+}
+
+/* --- log panel -------------------------------------------------------------- */
+
+.log-panel .tool-bar {
+    -fx-padding: 4px 8px;
+}
+
+.ls-log-list {
+    -fx-font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", "DejaVu Sans Mono", "Menlo", monospace;
+    -fx-font-size: 12px;
+}
+
+.ls-log-list .list-cell {
+    -fx-padding: 2px 8px;
+}
+
+.ls-log-list .list-cell.log-tx {
+    -fx-text-fill: -color-accent-fg;
+}
+
+.ls-log-list .list-cell.log-rx {
+    -fx-text-fill: -color-success-fg;
+}
+
+.ls-log-list .list-cell.log-error {
+    -fx-text-fill: -color-danger-fg;
+}
+
+.ls-log-list .list-cell.log-info {
+    -fx-text-fill: -color-fg-muted;
+}
+
+.ls-log-list .list-cell:selected {
+    -fx-text-fill: -color-fg-emphasis;
+}
+
+/* --- quick switch popup (Ctrl+K) -------------------------------------------- */
+
+.quick-switch {
+    -fx-background-color: -color-bg-default;
+    -fx-background-radius: 8px;
+    -fx-border-color: -color-border-default;
+    -fx-border-radius: 8px;
+    -fx-padding: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 24, 0.2, 0, 6);
+}
+
+/* --- toasts ----------------------------------------------------------------- */
+
+.toast {
+    -fx-background-radius: 8px;
+}
