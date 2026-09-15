@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+
+<!-- MQTT tab: the shared pub/sub panel; MQTT-only options are added by MqttController. -->
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.linkscope.modules.mqtt.MqttController">
+    <fx:include fx:id="panel" source="pubsub-panel.fxml" VBox.vgrow="ALWAYS"/>
+</VBox>

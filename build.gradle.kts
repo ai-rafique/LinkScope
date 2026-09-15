@@ -42,6 +42,7 @@ dependencies {
 
     // Transports (v2)
     implementation("org.apache.kafka:kafka-clients:4.3.0")
+    implementation("org.eclipse.paho:org.eclipse.paho.mqttv5.client:1.2.5")
 
     // Presets / config
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
