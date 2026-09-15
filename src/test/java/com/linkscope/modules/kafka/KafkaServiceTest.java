@@ -39,14 +39,14 @@ class KafkaServiceTest extends PubSubModuleContractTest {
     void receivedMessagesCarryPartitionAndOffset() {
         String topic = testTopic();
         module.subscribe(topic);
-        awaitTrue("subscribed", java.time.Duration.ofSeconds(20), () -> com.linkscope.core.LogSink.get().entries().stream()
+        awaitTrue("subscribed", java.time.Duration.ofSeconds(20), () -> com.linkscope.TestSupport.snapshot(com.linkscope.core.LogSink.get().entries()).stream()
                 .anyMatch(e -> e.note() != null && e.note().startsWith("Subscribed to " + topic)));
         byte[] payload = "with-meta".getBytes(StandardCharsets.UTF_8);
         module.publish(topic, payload);
         awaitTrue("received", java.time.Duration.ofSeconds(10), () -> !module.messages().isEmpty());
-        String meta = module.messages().get(0).metadata();
+        String meta = com.linkscope.TestSupport.snapshot(module.messages()).get(0).metadata();
         assertTrue(meta.matches("p\\d+ o\\d+.*"), meta);
-        assertEquals(topic, module.messages().get(0).topic());
+        assertEquals(topic, com.linkscope.TestSupport.snapshot(module.messages()).get(0).topic());
     }
 
     @Test

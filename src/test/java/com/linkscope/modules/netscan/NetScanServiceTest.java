@@ -57,10 +57,10 @@ class NetScanServiceTest {
         awaitTrue("sweep done", Duration.ofSeconds(20), () -> service.status() == ModuleStatus.CONNECTED);
         assertEquals(3, service.results().size());
         assertEquals(3, service.progressProperty().get());
-        boolean loopbackUp = service.results().stream()
+        boolean loopbackUp = com.linkscope.TestSupport.snapshot(service.results()).stream()
                 .anyMatch(r -> r.ip().equals("127.0.0.1") && r.state() == HostState.UP);
         assertTrue(loopbackUp, "127.0.0.1 must be up");
-        for (HostResult r : service.results()) {
+        for (HostResult r : com.linkscope.TestSupport.snapshot(service.results())) {
             assertTrue(r.lastOctet() >= 1 && r.lastOctet() <= 3);
         }
         assertTrue(service.upCountProperty().get() >= 1);

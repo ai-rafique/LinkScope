@@ -124,10 +124,37 @@ tasks.register<Zip>("appImageZip") {
     group = "distribution"
     description = "Zips the jpackage app image as a portable Windows build."
     dependsOn("jpackageImage")
+    onlyIf { org.gradle.internal.os.OperatingSystem.current().isWindows }
     from(appImageDir)
     into("LinkScope")
     archiveFileName.set("LinkScope-$distVersion-windows-portable.zip")
     destinationDirectory.set(installerDir)
+}
+
+// Linux portable build: a tarball keeps the launcher's executable bit, which a zip may not.
+// `./gradlew appImageTar` -> build/installer/LinkScope-<version>-linux-portable.tar.gz
+tasks.register<Tar>("appImageTar") {
+    group = "distribution"
+    description = "Tars the jpackage app image as a portable Linux build."
+    dependsOn("jpackageImage")
+    onlyIf { org.gradle.internal.os.OperatingSystem.current().isLinux }
+    from(appImageDir)
+    into("LinkScope")
+    compression = Compression.GZIP
+    archiveFileName.set("LinkScope-$distVersion-linux-portable.tar.gz")
+    destinationDirectory.set(installerDir)
+}
+
+// Copies the jpackage-built .deb next to the other distributables so CI uploads one folder.
+tasks.register<Copy>("linuxDeb") {
+    group = "distribution"
+    description = "Builds the .deb with jpackage and copies it to build/installer."
+    dependsOn("jpackage")
+    onlyIf { org.gradle.internal.os.OperatingSystem.current().isLinux }
+    from(layout.buildDirectory.dir("jpackage")) {
+        include("*.deb")
+    }
+    into(installerDir)
 }
 
 // badass-runtime: trimmed jlink image from the jdeps-suggested JDK module list,
@@ -159,8 +186,23 @@ runtime {
         }
         val iconOptions = if (iconFile != null && iconFile.asFile.exists()) listOf("--icon", iconFile.asFile.absolutePath) else emptyList()
         imageOptions = listOf("--app-version", appVersion) + iconOptions
-        // Leave installerType unset: jpackage picks the platform default(s).
-        // Windows .msi/.exe requires the WiX toolset on PATH.
-        installerOptions = listOf("--app-version", appVersion, "--vendor", "LinkScope", "--win-menu", "--win-shortcut", "--win-dir-chooser")
+        // Installer flags are platform-specific. Linux: a .deb via jpackage (needs dpkg-deb + fakeroot,
+        // both present on Debian/Ubuntu). Windows: jpackage's MSI needs WiX; the innoSetup task below
+        // is the supported route there instead.
+        val common = listOf("--app-version", appVersion, "--vendor", "LinkScope")
+        when {
+            os.isLinux -> {
+                installerType = "deb"
+                installerOptions = common + listOf(
+                    "--linux-package-name", "linkscope",
+                    "--linux-shortcut",
+                    "--linux-menu-group", "Development;Network",
+                    "--linux-app-category", "net",
+                    "--linux-deb-maintainer", "linkscope@localhost"
+                )
+            }
+            os.isWindows -> installerOptions = common + listOf("--win-menu", "--win-shortcut", "--win-dir-chooser")
+            else -> installerOptions = common
+        }
     }
 }

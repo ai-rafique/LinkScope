@@ -94,8 +94,8 @@ class PortScanServiceTest {
             service.start();
             awaitTrue("scan done", Duration.ofSeconds(20), () -> service.status() == ModuleStatus.CONNECTED);
             assertEquals(3, service.results().size());
-            assertTrue(service.results().stream().anyMatch(r -> r.port() == port && r.state() == PortState.LISTENING));
-            assertTrue(LogSink.get().entries().stream().anyMatch(e -> e.note() != null && e.note().startsWith("Scan complete")));
+            assertTrue(com.linkscope.TestSupport.snapshot(service.results()).stream().anyMatch(r -> r.port() == port && r.state() == PortState.LISTENING));
+            assertTrue(com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.note() != null && e.note().startsWith("Scan complete")));
         }
     }
 

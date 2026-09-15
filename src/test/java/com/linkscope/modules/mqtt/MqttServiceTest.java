@@ -43,7 +43,7 @@ class MqttServiceTest extends PubSubModuleContractTest {
         awaitTrue("subscribed", () -> loggedInfo("Subscribed to " + base + "/#"));
         byte[] payload = "deep".getBytes(StandardCharsets.UTF_8);
         module.publish(base + "/a/b", payload);
-        awaitTrue("wildcard delivery", DELIVERY_TIMEOUT, () -> module.messages().stream()
+        awaitTrue("wildcard delivery", DELIVERY_TIMEOUT, () -> com.linkscope.TestSupport.snapshot(module.messages()).stream()
                 .anyMatch(m -> m.topic().equals(base + "/a/b")));
     }
 
@@ -55,19 +55,19 @@ class MqttServiceTest extends PubSubModuleContractTest {
         mqtt.setRetain(true);
         mqtt.setPublishQos(1);
         module.publish(topic, payload);
-        awaitTrue("retained publish acked", DELIVERY_TIMEOUT, () -> LogSink.get().entries().stream()
+        awaitTrue("retained publish acked", DELIVERY_TIMEOUT, () -> com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream()
                 .anyMatch(e -> e.kind() == LogEntry.Kind.TX && e.note().contains("retain")));
 
         module.subscribe(topic);
         awaitTrue("retained message delivered to late subscriber", DELIVERY_TIMEOUT, () -> !module.messages().isEmpty());
-        assertEquals(topic, module.messages().get(0).topic());
-        assertTrue(module.messages().get(0).metadata().contains("RETAINED"), module.messages().get(0).metadata());
-        assertTrue(LogSink.get().entries().stream().anyMatch(e -> e.kind() == LogEntry.Kind.RX
+        assertEquals(topic, com.linkscope.TestSupport.snapshot(module.messages()).get(0).topic());
+        assertTrue(com.linkscope.TestSupport.snapshot(module.messages()).get(0).metadata().contains("RETAINED"), com.linkscope.TestSupport.snapshot(module.messages()).get(0).metadata());
+        assertTrue(com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.kind() == LogEntry.Kind.RX
                 && e.note().startsWith("[RETAINED] " + topic)));
 
         // clear the retained message so the broker does not keep test residue
         module.publish(topic, new byte[0]);
-        awaitTrue("clear acked", DELIVERY_TIMEOUT, () -> LogSink.get().entries().stream()
+        awaitTrue("clear acked", DELIVERY_TIMEOUT, () -> com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream()
                 .filter(e -> e.kind() == LogEntry.Kind.TX).count() >= 2);
     }
 
@@ -79,7 +79,7 @@ class MqttServiceTest extends PubSubModuleContractTest {
     }
 
     private static boolean loggedInfo(String text) {
-        return LogSink.get().entries().stream()
+        return com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream()
                 .anyMatch(e -> e.kind() == LogEntry.Kind.INFO && e.note() != null && e.note().contains(text));
     }
 }

@@ -72,7 +72,7 @@ class MulticastServiceTest {
         awaitTrue("error status", () -> service.status() == ModuleStatus.ERROR);
         assertFalse(LogSink.get().entries().isEmpty());
         // Other modules' late INFO lines can land in the shared log, so look for our error rather than the last line.
-        assertTrue(LogSink.get().entries().stream().anyMatch(e -> e.kind() == LogEntry.Kind.ERROR
+        assertTrue(com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.kind() == LogEntry.Kind.ERROR
                 && MulticastService.TAG.equals(e.module()) && e.note().contains("not a multicast address")));
     }
 }

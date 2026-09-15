@@ -49,7 +49,7 @@ class NatsServiceTest extends PubSubModuleContractTest {
         byte[] payload = "deep".getBytes(StandardCharsets.UTF_8);
         awaitTrue("wildcard delivery", () -> {
             module.publish(base + ".a.b", payload);
-            return module.messages().stream().anyMatch(m -> m.topic().equals(base + ".a.b"));
+            return com.linkscope.TestSupport.snapshot(module.messages()).stream().anyMatch(m -> m.topic().equals(base + ".a.b"));
         });
     }
 
@@ -65,9 +65,9 @@ class NatsServiceTest extends PubSubModuleContractTest {
         byte[] question = "ping".getBytes(StandardCharsets.UTF_8);
         byte[] expected = "echo:ping".getBytes(StandardCharsets.UTF_8);
         nats.request(subject, question, Duration.ofSeconds(3));
-        awaitTrue("reply recorded", () -> module.messages().stream()
+        awaitTrue("reply recorded", () -> com.linkscope.TestSupport.snapshot(module.messages()).stream()
                 .anyMatch(m -> m.metadata().startsWith("reply to " + subject)));
-        assertArrayEquals(expected, module.messages().get(0).payload());
+        assertArrayEquals(expected, com.linkscope.TestSupport.snapshot(module.messages()).get(0).payload());
         assertTrue(logged(NatsService.TAG, LogEntry.Kind.RX, expected));
     }
 
@@ -75,7 +75,7 @@ class NatsServiceTest extends PubSubModuleContractTest {
     void requestTimeoutIsReportedAsError() {
         String subject = testTopic();
         module.request(subject, new byte[] {1}, Duration.ofMillis(200));
-        awaitTrue("timeout error logged", () -> com.linkscope.core.LogSink.get().entries().stream()
+        awaitTrue("timeout error logged", () -> com.linkscope.TestSupport.snapshot(com.linkscope.core.LogSink.get().entries()).stream()
                 .anyMatch(e -> e.kind() == LogEntry.Kind.ERROR && e.note().contains("No reply on " + subject)));
     }
 

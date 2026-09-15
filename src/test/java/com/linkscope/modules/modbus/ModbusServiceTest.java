@@ -104,12 +104,12 @@ class ModbusServiceTest {
     }
 
     private static Exchange rx(ModbusService s, int index) {
-        List<Exchange> rx = s.exchanges().stream().filter(x -> x.direction().equals("RX")).toList();
+        List<Exchange> rx = com.linkscope.TestSupport.snapshot(s.exchanges()).stream().filter(x -> x.direction().equals("RX")).toList();
         return rx.get(index);
     }
 
     private static long rxCount(ModbusService s) {
-        return s.exchanges().stream().filter(x -> x.direction().equals("RX")).count();
+        return com.linkscope.TestSupport.snapshot(s.exchanges()).stream().filter(x -> x.direction().equals("RX")).count();
     }
 
     @Test
@@ -148,7 +148,7 @@ class ModbusServiceTest {
         assertFalse(x.crcOk());
         assertTrue(x.note().startsWith("CRC BAD (calculated cdc5, received cec5)"), x.note());
         assertTrue(x.note().contains("looks like RTU unit 1"), x.note());
-        assertTrue(LogSink.get().entries().stream().anyMatch(e -> e.kind() == com.linkscope.core.LogEntry.Kind.ERROR));
+        assertTrue(com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.kind() == com.linkscope.core.LogEntry.Kind.ERROR));
     }
 
     @Test
@@ -157,8 +157,8 @@ class ModbusServiceTest {
         service.sendPdu(1, ModbusEncoder.readRequest(3, 0, 10));
         awaitTrue("written", () -> !link.written.isEmpty());
         assertArrayEquals(b(0x01, 0x03, 0x00, 0x00, 0x00, 0x0A, 0xC5, 0xCD), link.written.get(0));
-        awaitTrue("TX recorded", () -> service.exchanges().stream().anyMatch(x -> x.direction().equals("TX")));
-        assertTrue(service.exchanges().get(0).summary().contains("request addr 0 qty 10"));
+        awaitTrue("TX recorded", () -> com.linkscope.TestSupport.snapshot(service.exchanges()).stream().anyMatch(x -> x.direction().equals("TX")));
+        assertTrue(com.linkscope.TestSupport.snapshot(service.exchanges()).get(0).summary().contains("request addr 0 qty 10"));
     }
 
     @Test

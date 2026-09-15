@@ -75,7 +75,7 @@ class SerialServiceTest {
         a.setPortName("LINKSCOPE_NO_SUCH_PORT");
         a.start();
         awaitTrue("error", () -> a.status() == ModuleStatus.ERROR);
-        assertTrue(LogSink.get().entries().stream().anyMatch(e -> e.kind() == LogEntry.Kind.ERROR));
+        assertTrue(com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.kind() == LogEntry.Kind.ERROR));
     }
 
     @Test
@@ -86,7 +86,7 @@ class SerialServiceTest {
     /** RX may arrive in several chunks; count bytes logged for that port. */
     private static boolean receivedTotal(String port, int expected) {
         int total = 0;
-        for (LogEntry e : LogSink.get().entries().toArray(new LogEntry[0])) {
+        for (LogEntry e : com.linkscope.TestSupport.snapshot(LogSink.get().entries())) {
             if (e.kind() == LogEntry.Kind.RX && SerialService.TAG.equals(e.module()) && port.equals(e.note())) {
                 total += e.payload().length;
             }

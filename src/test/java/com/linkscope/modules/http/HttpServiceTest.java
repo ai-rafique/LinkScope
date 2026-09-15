@@ -99,8 +99,8 @@ class HttpServiceTest {
         assertTrue(x.isJson());
         assertTrue(x.bodyText().contains("\"method\":\"GET\""));
         assertEquals(ModuleStatus.CONNECTED, service.status());
-        assertTrue(LogSink.get().entries().stream().anyMatch(e -> e.kind() == LogEntry.Kind.TX && e.note().startsWith("GET ")));
-        assertTrue(LogSink.get().entries().stream().anyMatch(e -> e.kind() == LogEntry.Kind.RX && e.note().startsWith("200 OK")));
+        assertTrue(com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.kind() == LogEntry.Kind.TX && e.note().startsWith("GET ")));
+        assertTrue(com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.kind() == LogEntry.Kind.RX && e.note().startsWith("200 OK")));
     }
 
     @Test
@@ -154,7 +154,7 @@ class HttpServiceTest {
         HttpExchange r = run(refused);
         assertTrue(r.failed());
         assertNotNull(r.error());
-        assertTrue(LogSink.get().entries().stream().anyMatch(e -> e.kind() == LogEntry.Kind.ERROR));
+        assertTrue(com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.kind() == LogEntry.Kind.ERROR));
     }
 
     @Test

@@ -109,7 +109,7 @@ class WebSocketServiceTest {
 
         byte[] raw = {0, 1, 2, (byte) 0xff};
         service.sendBinary(raw);
-        awaitTrue("RX binary echo", () -> LogSink.get().entries().stream().anyMatch(e -> e.kind() == LogEntry.Kind.RX
+        awaitTrue("RX binary echo", () -> com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.kind() == LogEntry.Kind.RX
                 && "binary frame".equals(e.note()) && java.util.Arrays.equals(e.payload(), raw)));
     }
 
@@ -117,7 +117,7 @@ class WebSocketServiceTest {
     void pingGetsPongWithRoundTrip() {
         connect();
         service.ping();
-        awaitTrue("pong logged", () -> LogSink.get().entries().stream()
+        awaitTrue("pong logged", () -> com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream()
                 .anyMatch(e -> e.kind() == LogEntry.Kind.INFO && e.note().startsWith("Pong received, round trip")));
         assertTrue(service.lastPingMsProperty().get() >= 0);
     }
@@ -129,7 +129,7 @@ class WebSocketServiceTest {
         awaitTrue("server saw header", () -> "Bearer abc".equals(server.lastAuthHeader.get()));
         service.stop();
         awaitTrue("disconnected", () -> service.status() == ModuleStatus.DISCONNECTED);
-        assertTrue(LogSink.get().entries().stream().anyMatch(e -> e.kind() == LogEntry.Kind.INFO
+        assertTrue(com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.kind() == LogEntry.Kind.INFO
                 && e.note().startsWith("Disconnected (code 1000")));
     }
 
@@ -138,7 +138,7 @@ class WebSocketServiceTest {
         service.setUrl("ws://127.0.0.1:1/");
         service.start();
         awaitTrue("error", () -> service.status() == ModuleStatus.ERROR);
-        assertTrue(LogSink.get().entries().stream().anyMatch(e -> e.kind() == LogEntry.Kind.ERROR));
+        assertTrue(com.linkscope.TestSupport.snapshot(LogSink.get().entries()).stream().anyMatch(e -> e.kind() == LogEntry.Kind.ERROR));
     }
 
     @Test

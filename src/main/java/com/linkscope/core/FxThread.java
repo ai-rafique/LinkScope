@@ -31,4 +31,18 @@ public final class FxThread {
             work.run();
         }
     }
+
+    /**
+     * Reads state that {@link #run} mutates. With the toolkit running this must be called on
+     * the FX thread (as any read of FX state); without it, the read is serialized against the
+     * inline updates so an iteration never races an append.
+     */
+    public static <T> T read(java.util.function.Supplier<T> reader) {
+        if (fxAvailable) {
+            return reader.get();
+        }
+        synchronized (FALLBACK_LOCK) {
+            return reader.get();
+        }
+    }
 }

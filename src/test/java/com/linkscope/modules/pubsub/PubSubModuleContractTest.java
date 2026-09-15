@@ -43,7 +43,9 @@ public abstract class PubSubModuleContractTest {
         LogSink.get().clear();
         module = createModule();
         module.connectToBroker(brokerList());
-        awaitTrue("connected or failed", () -> module.status() == ModuleStatus.CONNECTED
+        // Must outlast the clients' own connect timeouts (Kafka's admin call gives up after 5 s)
+        // so an absent broker ends in ERROR and a skip, not a test failure.
+        awaitTrue("connected or failed", Duration.ofSeconds(20), () -> module.status() == ModuleStatus.CONNECTED
                 || module.status() == ModuleStatus.ERROR);
         Assumptions.assumeTrue(module.status() == ModuleStatus.CONNECTED,
                 "broker " + brokerList() + " not reachable:\n" + TestSupport.dumpLog());
@@ -69,7 +71,7 @@ public abstract class PubSubModuleContractTest {
         byte[] payload = ("hello " + topic).getBytes(StandardCharsets.UTF_8);
         module.publish(topic, payload);
         awaitTrue("TX logged", DELIVERY_TIMEOUT, () -> loggedTxContaining(payload));
-        awaitTrue("message received", DELIVERY_TIMEOUT, () -> module.messages().stream()
+        awaitTrue("message received", DELIVERY_TIMEOUT, () -> com.linkscope.TestSupport.snapshot(module.messages()).stream()
                 .anyMatch(m -> m.topic().equals(topic) && Arrays.equals(m.payload(), payload)));
         awaitTrue("RX logged", () -> logged(module.moduleName(), LogEntry.Kind.RX, payload));
         assertEquals(1, module.messages().size());
@@ -97,7 +99,7 @@ public abstract class PubSubModuleContractTest {
     }
 
     private static boolean loggedInfoContaining(String text) {
-        for (LogEntry e : LogSink.get().entries().toArray(new LogEntry[0])) {
+        for (LogEntry e : com.linkscope.TestSupport.snapshot(LogSink.get().entries())) {
             if (e.kind() == LogEntry.Kind.INFO && e.note() != null && e.note().contains(text)) {
                 return true;
             }
