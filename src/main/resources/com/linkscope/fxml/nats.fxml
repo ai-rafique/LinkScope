@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+
+<!-- NATS tab: nothing broker-specific in the view; everything lives in the shared pub/sub panel. -->
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.linkscope.modules.nats.NatsController">
+    <fx:include fx:id="panel" source="pubsub-panel.fxml" VBox.vgrow="ALWAYS"/>
+</VBox>

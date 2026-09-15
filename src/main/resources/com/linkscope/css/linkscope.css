@@ -31,6 +31,16 @@
     -fx-font-weight: bold;
 }
 
+.ls-tab-scroller {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.ls-tab-scroller > .viewport {
+    -fx-background-color: transparent;
+}
+
 /* --- module panels ---------------------------------------------------------- */
 
 .ls-module {

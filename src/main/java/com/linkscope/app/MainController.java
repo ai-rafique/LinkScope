@@ -18,6 +18,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -139,10 +140,16 @@ public class MainController {
         HBox header = new HBox(6, new FontIcon(d.icon()), new Label(d.title()), badge);
         header.setAlignment(Pos.CENTER_LEFT);
 
+        // Scroll rather than squash when the log panel takes most of the window height.
+        ScrollPane scroller = new ScrollPane(content);
+        scroller.setFitToWidth(true);
+        scroller.setFitToHeight(true);
+        scroller.getStyleClass().add("ls-tab-scroller");
+
         Tab tab = new Tab();
         tab.setId(d.id());
         tab.setGraphic(header);
-        tab.setContent(content);
+        tab.setContent(scroller);
         tab.setClosable(false);
         tab.setUserData(controller);
         tab.getProperties().put(QuickSwitchPopup.TITLE_KEY, d.title());

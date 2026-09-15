@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.linkscope.core.ui.StatusBadge?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<!-- Shared broker pub/sub panel used by NATS, Kafka and MQTT via fx:include. See PubSubPanelController. -->
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.linkscope.modules.pubsub.PubSubPanelController" styleClass="ls-module">
+    <!-- Broker -->
+    <VBox styleClass="ls-panel">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label fx:id="brokerLabel" text="Broker" styleClass="ls-panel-title"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <StatusBadge fx:id="statusBadge"/>
+        </HBox>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Servers" styleClass="text-muted" minWidth="72"/>
+            <TextField fx:id="brokerField" HBox.hgrow="ALWAYS"/>
+            <Button fx:id="connectButton" text="Connect" styleClass="accent"/>
+        </HBox>
+    </VBox>
+
+    <HBox spacing="16">
+        <!-- Subscriptions -->
+        <VBox styleClass="ls-panel" HBox.hgrow="ALWAYS" minWidth="320">
+            <Label fx:id="subscriptionsTitle" text="Subscriptions" styleClass="ls-panel-title"/>
+            <HBox spacing="8">
+                <TextField fx:id="subscribeField" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="subscribeButton" text="Subscribe">
+                    <graphic><FontIcon iconLiteral="fth-plus"/></graphic>
+                </Button>
+            </HBox>
+            <ListView fx:id="subscriptionsList" prefHeight="96" VBox.vgrow="ALWAYS"/>
+            <Button fx:id="unsubscribeButton" text="Unsubscribe selected" styleClass="small">
+                <graphic><FontIcon iconLiteral="fth-minus"/></graphic>
+            </Button>
+        </VBox>
+
+        <!-- Publish -->
+        <VBox styleClass="ls-panel" HBox.hgrow="ALWAYS" minWidth="360">
+            <Label text="Publish" styleClass="ls-panel-title"/>
+            <GridPane styleClass="ls-form">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="72"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+                <Label fx:id="publishTopicLabel" text="Topic" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="publishTopicField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+            </GridPane>
+            <HBox fx:id="requestBox" spacing="8" alignment="CENTER_LEFT">
+                <CheckBox fx:id="requestReplyCheck" text="Request / reply">
+                    <tooltip><Tooltip text="Publish with a reply inbox and wait for one response; the reply is logged as RX"/></tooltip>
+                </CheckBox>
+                <Label text="Timeout (ms)" styleClass="text-muted"/>
+                <TextField fx:id="timeoutField" text="2000" prefWidth="80"/>
+            </HBox>
+            <fx:include fx:id="sendBar" source="send-bar.fxml"/>
+        </VBox>
+    </HBox>
+
+    <!-- Messages -->
+    <VBox spacing="4" VBox.vgrow="ALWAYS">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Messages" styleClass="ls-section-title"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button fx:id="clearMessagesButton" text="Clear" styleClass="small">
+                <graphic><FontIcon iconLiteral="fth-trash-2"/></graphic>
+            </Button>
+        </HBox>
+        <TableView fx:id="messagesTable" VBox.vgrow="ALWAYS" minHeight="100">
+            <columns>
+                <TableColumn fx:id="timeColumn" text="Time" prefWidth="100"/>
+                <TableColumn fx:id="topicColumn" text="Topic" prefWidth="180"/>
+                <TableColumn fx:id="sizeColumn" text="Size" prefWidth="60"/>
+                <TableColumn fx:id="payloadColumn" text="Payload" prefWidth="420"/>
+                <TableColumn fx:id="metadataColumn" text="Metadata" prefWidth="200"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <Label fx:id="hintLabel" styleClass="ls-hint" wrapText="true"/>
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+</VBox>

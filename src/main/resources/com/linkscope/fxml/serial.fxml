@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.linkscope.core.ui.StatusBadge?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.linkscope.modules.serial.SerialController" styleClass="ls-module">
+    <VBox styleClass="ls-panel">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Port" styleClass="ls-panel-title"/>
+            <Label fx:id="portsHint" text="Scanning…" styleClass="text-muted, small"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <StatusBadge fx:id="statusBadge"/>
+        </HBox>
+        <GridPane styleClass="ls-form">
+            <columnConstraints>
+                <ColumnConstraints minWidth="80"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+                <ColumnConstraints minWidth="80"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+                <ColumnConstraints minWidth="80"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+            <Label text="Port" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <HBox spacing="8" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.columnSpan="5">
+                <ComboBox fx:id="portCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" promptText="Scanning…"/>
+                <Button fx:id="refreshButton" styleClass="button-icon">
+                    <graphic><FontIcon iconLiteral="fth-refresh-cw"/></graphic>
+                    <tooltip><Tooltip text="Rescan serial ports"/></tooltip>
+                </Button>
+            </HBox>
+
+            <Label text="Baud" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="baudCombo" editable="true" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                <tooltip><Tooltip text="Bits per second. Pick a standard rate or type a custom one."/></tooltip>
+            </ComboBox>
+            <Label text="Data bits" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <ComboBox fx:id="dataBitsCombo" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+            <Label text="Parity" GridPane.rowIndex="1" GridPane.columnIndex="4"/>
+            <ComboBox fx:id="parityCombo" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="5"/>
+
+            <Label text="Stop bits" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="stopBitsCombo" maxWidth="Infinity" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+            <Label text="Flow control" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+            <ComboBox fx:id="flowCombo" maxWidth="Infinity" GridPane.rowIndex="2" GridPane.columnIndex="3">
+                <tooltip><Tooltip text="Hardware (RTS/CTS) or software (XON/XOFF) handshaking. None for most USB-serial devices."/></tooltip>
+            </ComboBox>
+            <HBox spacing="16" alignment="CENTER_LEFT" GridPane.rowIndex="2" GridPane.columnIndex="5">
+                <CheckBox fx:id="dtrCheck" text="DTR" selected="true">
+                    <tooltip><Tooltip text="Assert Data Terminal Ready. Many boards (Arduino, ESP) only talk, or reset, when DTR is asserted. Can be toggled while open."/></tooltip>
+                </CheckBox>
+                <CheckBox fx:id="rtsCheck" text="RTS" selected="true">
+                    <tooltip><Tooltip text="Assert Request To Send. Can be toggled while open."/></tooltip>
+                </CheckBox>
+            </HBox>
+        </GridPane>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button fx:id="openButton" text="Open port" styleClass="accent"/>
+        </HBox>
+    </VBox>
+
+    <fx:include fx:id="sendBar" source="send-bar.fxml"/>
+
+    <Label styleClass="ls-hint" wrapText="true"
+           text="Defaults are 9600 8N1, no flow control, CRLF line ending. With a virtual port pair, open one end here and the other in a second LinkScope window or terminal to see traffic both ways."/>
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+</VBox>

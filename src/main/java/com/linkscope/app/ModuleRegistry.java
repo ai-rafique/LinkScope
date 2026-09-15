@@ -16,7 +16,9 @@ public final class ModuleRegistry {
     public static final List<ModuleDescriptor> MODULES = List.of(
             new ModuleDescriptor("udp", "UDP", "udp.fxml", "fth-zap"),
             new ModuleDescriptor("tcp", "TCP", "tcp.fxml", "fth-link"),
-            new ModuleDescriptor("multicast", "Multicast", "multicast.fxml", "fth-radio")
+            new ModuleDescriptor("multicast", "Multicast", "multicast.fxml", "fth-radio"),
+            new ModuleDescriptor("nats", "NATS", "nats.fxml", "fth-message-circle"),
+            new ModuleDescriptor("serial", "Serial", "serial.fxml", "fth-cpu")
     );
 
     private ModuleRegistry() {
