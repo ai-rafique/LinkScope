@@ -50,6 +50,8 @@ dependencies {
 
     // Testing
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
+    // WebSocket echo server for WebSocketServiceTest only; the app itself uses java.net.http.WebSocket.
+    testImplementation("org.java-websocket:Java-WebSocket:1.6.0")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

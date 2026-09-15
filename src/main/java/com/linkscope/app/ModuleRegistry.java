@@ -20,7 +20,9 @@ public final class ModuleRegistry {
             new ModuleDescriptor("nats", "NATS", "nats.fxml", "fth-message-circle"),
             new ModuleDescriptor("kafka", "Kafka", "kafka.fxml", "fth-layers"),
             new ModuleDescriptor("mqtt", "MQTT", "mqtt.fxml", "fth-rss"),
-            new ModuleDescriptor("serial", "Serial", "serial.fxml", "fth-cpu")
+            new ModuleDescriptor("serial", "Serial", "serial.fxml", "fth-cpu"),
+            new ModuleDescriptor("http", "HTTP", "http.fxml", "fth-globe"),
+            new ModuleDescriptor("websocket", "WebSocket", "websocket.fxml", "fth-repeat")
     );
 
     private ModuleRegistry() {

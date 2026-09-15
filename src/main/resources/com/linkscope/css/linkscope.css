@@ -81,6 +81,23 @@
     -fx-padding: 0;
 }
 
+.ls-mono {
+    -fx-font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", "DejaVu Sans Mono", "Menlo", monospace;
+    -fx-font-size: 12px;
+}
+
+.ls-subtabs .tab-header-area {
+    -fx-padding: 0 0 4px 0;
+}
+
+.ls-subtabs > .tab-content-area {
+    -fx-padding: 8px 0 0 0;
+}
+
+.history-title {
+    -fx-font-size: 12px;
+}
+
 /* --- status badge (icon shape + text; never color alone) -------------------- */
 
 .status-badge .status-icon {
