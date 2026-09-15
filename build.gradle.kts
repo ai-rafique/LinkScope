@@ -83,7 +83,15 @@ runtime {
         installerName = "LinkScope"
         // jpackage (and MSI) require a purely numeric version: strip any -SNAPSHOT/-rc suffix.
         val appVersion = project.version.toString().substringBefore("-")
-        imageOptions = listOf("--app-version", appVersion)
+        // Branding: .ico on Windows, .png on Linux; macOS wants .icns (not generated yet, so it falls back to the default).
+        val os = org.gradle.internal.os.OperatingSystem.current()
+        val iconFile = when {
+            os.isWindows -> layout.projectDirectory.file("packaging/linkscope.ico")
+            os.isLinux -> layout.projectDirectory.file("packaging/linkscope.png")
+            else -> null
+        }
+        val iconOptions = if (iconFile != null && iconFile.asFile.exists()) listOf("--icon", iconFile.asFile.absolutePath) else emptyList()
+        imageOptions = listOf("--app-version", appVersion) + iconOptions
         // Leave installerType unset: jpackage picks the platform default(s).
         // Windows .msi/.exe requires the WiX toolset on PATH.
         installerOptions = listOf("--app-version", appVersion, "--vendor", "LinkScope", "--win-menu", "--win-shortcut", "--win-dir-chooser")

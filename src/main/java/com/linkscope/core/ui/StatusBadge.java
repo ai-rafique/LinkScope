@@ -54,6 +54,11 @@ public class StatusBadge extends HBox {
         status.set(value);
     }
 
+    /** The wording currently shown (or in the tooltip when compact), honouring label overrides. */
+    public String getStatusText() {
+        return label.getText();
+    }
+
     /** Icon only; the text moves into the tooltip. */
     public void setCompact(boolean compact) {
         this.compact = compact;

@@ -3,38 +3,49 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<!-- Shell: toolbar (presets, log toggle, theme), module TabPane, shared log panel. Toasts overlay the StackPane. -->
+<!-- Shell: toolbar (hamburger, presets, log toggle, theme), collapsible sidebar of modules,
+     one module's content in the centre, shared log panel below. Toasts overlay the StackPane. -->
 <StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
            fx:id="root" fx:controller="com.linkscope.app.MainController">
     <BorderPane>
         <top>
             <ToolBar styleClass="ls-toolbar">
+                <Button fx:id="sidebarButton" styleClass="button-icon">
+                    <graphic><FontIcon iconLiteral="fth-menu"/></graphic>
+                    <tooltip><Tooltip text="Collapse / expand the module list (Ctrl+B)"/></tooltip>
+                </Button>
+                <ImageView fitWidth="24" fitHeight="24" preserveRatio="true" smooth="true" styleClass="ls-brand-mark">
+                    <Image url="@../icons/linkscope-mark-48.png"/>
+                </ImageView>
                 <Label text="LinkScope" styleClass="ls-brand"/>
-                <Label text="Inspect. Decode. Trace." styleClass="text-muted, small"/>
+                <Label fx:id="moduleTitle" styleClass="text-muted"/>
                 <Pane HBox.hgrow="ALWAYS"/>
                 <Label text="Preset" styleClass="text-muted"/>
                 <ComboBox fx:id="presetCombo" editable="true" promptText="name" prefWidth="180">
-                    <tooltip><Tooltip text="Presets are per tab. Type a name and Save, or pick one and Load. Values may use ${VAR} from .env."/></tooltip>
+                    <tooltip><Tooltip text="Presets are per module. Type a name and Save, or pick one and Load. Values may use ${VAR} from .env."/></tooltip>
                 </ComboBox>
                 <Button fx:id="loadPresetButton" text="Load">
                     <graphic><FontIcon iconLiteral="fth-folder"/></graphic>
-                    <tooltip><Tooltip text="Apply the named preset to the current tab (resolves ${VAR} placeholders)"/></tooltip>
+                    <tooltip><Tooltip text="Apply the named preset to the current module (resolves ${VAR} placeholders)"/></tooltip>
                 </Button>
                 <Button fx:id="savePresetButton" text="Save">
                     <graphic><FontIcon iconLiteral="fth-save"/></graphic>
-                    <tooltip><Tooltip text="Save the current tab's fields under this name"/></tooltip>
+                    <tooltip><Tooltip text="Save the current module's fields under this name"/></tooltip>
                 </Button>
                 <Button fx:id="deletePresetButton" styleClass="button-icon">
                     <graphic><FontIcon iconLiteral="fth-trash-2"/></graphic>
@@ -50,9 +61,14 @@
                 </Button>
             </ToolBar>
         </top>
+        <left>
+            <ScrollPane fx:id="sidebarScroller" fitToWidth="true" hbarPolicy="NEVER" styleClass="ls-sidebar-scroller">
+                <VBox fx:id="sidebar" styleClass="ls-sidebar" spacing="2"/>
+            </ScrollPane>
+        </left>
         <center>
-            <SplitPane fx:id="split" orientation="VERTICAL" dividerPositions="0.58">
-                <TabPane fx:id="tabs" tabClosingPolicy="UNAVAILABLE" styleClass="ls-tabs"/>
+            <SplitPane fx:id="split" orientation="VERTICAL" dividerPositions="0.6">
+                <StackPane fx:id="contentPane" styleClass="ls-content"/>
                 <fx:include fx:id="logPanel" source="log-panel.fxml"/>
             </SplitPane>
         </center>

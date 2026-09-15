@@ -1,38 +1,40 @@
 package com.linkscope.app;
 
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 import javafx.stage.Window;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.IntConsumer;
+import java.util.function.Supplier;
 
-/** Ctrl+K quick tab switcher: type to filter, Up/Down to move, Enter to jump, Esc to close. */
+/** Ctrl+K quick module switcher: type to filter, Up/Down to move, Enter to jump, Esc to close. */
 final class QuickSwitchPopup {
-    static final String TITLE_KEY = "ls.title";
     private static final double WIDTH = 360;
 
-    private final TabPane tabs;
+    /** A filtered row: the module title and its index in the registry order. */
+    private record Row(String title, int index) {
+        @Override
+        public String toString() {
+            return title;
+        }
+    }
+
+    private final Supplier<List<String>> titles;
+    private final IntConsumer select;
     private final Popup popup = new Popup();
     private final TextField filter = new TextField();
-    private final ListView<Tab> list = new ListView<>();
+    private final ListView<Row> list = new ListView<>();
 
-    QuickSwitchPopup(TabPane tabs, String stylesheet) {
-        this.tabs = tabs;
-        filter.setPromptText("Jump to tab…");
-        list.setPrefHeight(200);
-        list.setCellFactory(v -> new ListCell<>() {
-            @Override
-            protected void updateItem(Tab item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : titleOf(item));
-            }
-        });
+    QuickSwitchPopup(Supplier<List<String>> titles, IntConsumer select, String stylesheet) {
+        this.titles = titles;
+        this.select = select;
+        filter.setPromptText("Jump to module…");
+        list.setPrefHeight(240);
         VBox box = new VBox(8, filter, list);
         box.getStyleClass().add("quick-switch");
         box.setPrefWidth(WIDTH);
@@ -60,11 +62,6 @@ final class QuickSwitchPopup {
         popup.getContent().add(box);
     }
 
-    static String titleOf(Tab tab) {
-        Object t = tab.getProperties().get(TITLE_KEY);
-        return t != null ? t.toString() : Objects.toString(tab.getText(), "");
-    }
-
     void show(Window owner) {
         if (popup.isShowing()) {
             popup.hide();
@@ -80,13 +77,15 @@ final class QuickSwitchPopup {
 
     private void refilter(String text) {
         String q = text == null ? "" : text.trim().toLowerCase();
-        list.getItems().clear();
-        for (Tab tab : tabs.getTabs()) {
-            if (q.isEmpty() || titleOf(tab).toLowerCase().contains(q)) {
-                list.getItems().add(tab);
+        List<Row> rows = new ArrayList<>();
+        List<String> all = titles.get();
+        for (int i = 0; i < all.size(); i++) {
+            if (q.isEmpty() || all.get(i).toLowerCase().contains(q)) {
+                rows.add(new Row(all.get(i), i));
             }
         }
-        if (!list.getItems().isEmpty()) {
+        list.getItems().setAll(rows);
+        if (!rows.isEmpty()) {
             list.getSelectionModel().select(0);
         }
     }
@@ -103,11 +102,10 @@ final class QuickSwitchPopup {
     }
 
     private void choose() {
-        Tab tab = list.getSelectionModel().getSelectedItem();
+        Row row = list.getSelectionModel().getSelectedItem();
         popup.hide();
-        if (tab != null) {
-            tabs.getSelectionModel().select(tab);
-            tab.getContent().requestFocus();
+        if (row != null) {
+            select.accept(row.index());
         }
     }
 }

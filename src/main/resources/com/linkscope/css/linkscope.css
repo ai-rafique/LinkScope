@@ -18,12 +18,76 @@
     -fx-padding: 6px 12px;
 }
 
-.ls-tabs .tab-header-area {
-    -fx-padding: 4px 8px 0 8px;
+/* --- sidebar ---------------------------------------------------------------- */
+
+.ls-sidebar-scroller {
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-color: transparent -color-border-default transparent transparent;
+    -fx-border-width: 0 1px 0 0;
 }
 
-.ls-tabs .tab {
-    -fx-padding: 6px 12px;
+.ls-sidebar-scroller > .viewport {
+    -fx-background-color: transparent;
+}
+
+.ls-sidebar {
+    -fx-background-color: -color-bg-subtle;
+    -fx-padding: 8px 6px;
+}
+
+.ls-nav-group {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-fg-muted;
+    -fx-padding: 12px 8px 4px 8px;
+}
+
+.ls-nav-separator {
+    -fx-padding: 6px 4px;
+}
+
+.ls-nav-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+    -fx-padding: 8px 10px;
+    -fx-text-fill: -color-fg-default;
+    -fx-cursor: hand;
+}
+
+.ls-nav-button:hover {
+    -fx-background-color: -color-bg-default;
+}
+
+.ls-nav-button:selected,
+.ls-nav-button:selected:hover {
+    -fx-background-color: -color-accent-subtle;
+}
+
+.ls-nav-button .label {
+    -fx-text-fill: -color-fg-default;
+    -fx-font-size: 13px;
+}
+
+.ls-nav-button:selected .label {
+    -fx-text-fill: -color-accent-fg;
+    -fx-font-weight: bold;
+}
+
+.ls-nav-button .ls-nav-icon {
+    -fx-icon-size: 16;
+    -fx-icon-color: -color-fg-muted;
+}
+
+.ls-nav-button:selected .ls-nav-icon {
+    -fx-icon-color: -color-accent-fg;
+}
+
+.ls-content {
+    -fx-background-color: -color-bg-default;
 }
 
 .ls-section-title {
