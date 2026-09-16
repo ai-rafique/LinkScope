@@ -82,9 +82,24 @@ public class MainController {
     @FXML private Button themeButton;
     @FXML private FontIcon themeIcon;
 
+    /** A sidebar group: its clickable header row, chevron, member modules and collapsed state. */
+    private static final class Group {
+        final String name;
+        final HBox header;
+        final FontIcon chevron;
+        final List<ModuleEntry> entries = new ArrayList<>();
+        boolean collapsed;
+
+        Group(String name, HBox header, FontIcon chevron) {
+            this.name = name;
+            this.header = header;
+            this.chevron = chevron;
+        }
+    }
+
     private final PresetStore presets = PresetStore.defaultStore();
     private final List<ModuleEntry> modules = new ArrayList<>();
-    private final List<Label> groupHeaders = new ArrayList<>();
+    private final List<Group> groups = new ArrayList<>();
     private final List<Separator> groupSeparators = new ArrayList<>();
     private final ToggleGroup navGroup = new ToggleGroup();
     private ModuleEntry current;
@@ -166,25 +181,75 @@ public class MainController {
     // --- sidebar -----------------------------------------------------------------
 
     private void buildSidebar() {
-        String lastGroup = null;
+        List<String> collapsedNames = List.of(PREFS.get("collapsedGroups", "").split(","));
+        Group current = null;
         for (ModuleDescriptor d : ModuleRegistry.MODULES) {
-            if (!d.group().equals(lastGroup)) {
-                if (lastGroup != null) {
+            if (current == null || !current.name.equals(d.group())) {
+                if (current != null) {
                     Separator sep = new Separator();
                     sep.getStyleClass().add("ls-nav-separator");
                     groupSeparators.add(sep);
                     sidebar.getChildren().add(sep);
                 }
-                Label header = new Label(d.group().toUpperCase());
+                Label title = new Label(d.group().toUpperCase());
+                Region spacer = new Region();
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+                FontIcon chevron = new FontIcon("fth-chevron-down");
+                chevron.getStyleClass().add("ls-nav-chevron");
+                HBox header = new HBox(6, title, spacer, chevron);
+                header.setAlignment(Pos.CENTER_LEFT);
                 header.getStyleClass().add("ls-nav-group");
-                groupHeaders.add(header);
+                Tooltip.install(header, new Tooltip("Click to collapse or expand " + d.group()));
+                Group group = new Group(d.group(), header, chevron);
+                group.collapsed = collapsedNames.contains(d.group());
+                header.setOnMouseClicked(e -> toggleGroup(group));
+                groups.add(group);
                 sidebar.getChildren().add(header);
-                lastGroup = d.group();
+                current = group;
             }
             ModuleEntry entry = loadModule(d);
             modules.add(entry);
+            current.entries.add(entry);
             sidebar.getChildren().add(entry.button());
         }
+        applyGroupVisibility();
+    }
+
+    private void toggleGroup(Group group) {
+        group.collapsed = !group.collapsed;
+        applyGroupVisibility();
+        persistGroups();
+    }
+
+    /** Hides members of collapsed groups; in icon-only mode headers are hidden, so everything shows. */
+    private void applyGroupVisibility() {
+        for (Group g : groups) {
+            boolean show = sidebarCollapsed || !g.collapsed;
+            g.chevron.setIconLiteral(g.collapsed ? "fth-chevron-right" : "fth-chevron-down");
+            for (ModuleEntry m : g.entries) {
+                m.button().setVisible(show);
+                m.button().setManaged(show);
+            }
+        }
+    }
+
+    private void persistGroups() {
+        List<String> names = new ArrayList<>();
+        for (Group g : groups) {
+            if (g.collapsed) {
+                names.add(g.name);
+            }
+        }
+        PREFS.put("collapsedGroups", String.join(",", names));
+    }
+
+    private Group groupOf(ModuleEntry entry) {
+        for (Group g : groups) {
+            if (g.entries.contains(entry)) {
+                return g;
+            }
+        }
+        return null;
     }
 
     private ModuleEntry loadModule(ModuleDescriptor d) {
@@ -247,14 +312,15 @@ public class MainController {
             m.badge().setManaged(!collapsed);
             m.button().setAlignment(collapsed ? Pos.CENTER : Pos.CENTER_LEFT);
         }
-        for (Label h : groupHeaders) {
-            h.setVisible(!collapsed);
-            h.setManaged(!collapsed);
+        for (Group g : groups) {
+            g.header.setVisible(!collapsed);
+            g.header.setManaged(!collapsed);
         }
         for (Separator s : groupSeparators) {
             s.setVisible(collapsed);
             s.setManaged(collapsed);
         }
+        applyGroupVisibility();
         sidebar.pseudoClassStateChanged(javafx.css.PseudoClass.getPseudoClass("collapsed"), collapsed);
         double target = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED;
         sidebarScroller.setMinWidth(Region.USE_PREF_SIZE);
@@ -295,6 +361,12 @@ public class MainController {
 
     private void select(ModuleEntry entry) {
         current = entry;
+        Group g = groupOf(entry);
+        if (g != null && g.collapsed) {
+            g.collapsed = false;   // a shortcut or the switcher picked a hidden module: reveal its group
+            applyGroupVisibility();
+            persistGroups();
+        }
         entry.button().setSelected(true);
         contentPane.getChildren().setAll(entry.content());
         moduleTitle.setText("/ " + entry.descriptor().title());

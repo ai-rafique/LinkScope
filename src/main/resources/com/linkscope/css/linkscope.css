@@ -38,10 +38,24 @@
 }
 
 .ls-nav-group {
+    -fx-padding: 10px 8px 4px 8px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+}
+
+.ls-nav-group:hover {
+    -fx-background-color: -color-bg-default;
+}
+
+.ls-nav-group > .label {
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-fg-muted;
-    -fx-padding: 12px 8px 4px 8px;
+}
+
+.ls-nav-group .ls-nav-chevron {
+    -fx-icon-size: 12;
+    -fx-icon-color: -color-fg-muted;
 }
 
 .ls-nav-separator {
