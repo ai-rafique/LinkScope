@@ -4,7 +4,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToolBar?>
@@ -40,14 +39,10 @@
         </ToggleButton>
         <TextField fx:id="filterField" promptText="Filter text" prefWidth="180"/>
         <Pane HBox.hgrow="ALWAYS"/>
-        <ToggleButton fx:id="modbusToggle" text="Modbus">
-            <graphic><FontIcon iconLiteral="fth-cpu"/></graphic>
-            <tooltip><Tooltip text="Annotate TX/RX lines that decode as Modbus RTU (valid CRC) or Modbus TCP (MBAP header) with unit, function and data"/></tooltip>
-        </ToggleButton>
-        <ToggleButton fx:id="inspectToggle" text="Inspect">
-            <graphic><FontIcon iconLiteral="fth-eye"/></graphic>
-            <tooltip><Tooltip text="Open the payload inspector for the selected line (Ctrl+I)"/></tooltip>
-        </ToggleButton>
+        <Button fx:id="decodeButton" text="Decode">
+            <graphic><FontIcon iconLiteral="fth-columns"/></graphic>
+            <tooltip><Tooltip text="Open the selected TX/RX line in the Decoder tool (Ctrl+I)"/></tooltip>
+        </Button>
         <Button fx:id="clearButton" text="Clear">
             <graphic><FontIcon iconLiteral="fth-trash-2"/></graphic>
             <tooltip><Tooltip text="Clear the log (Ctrl+L)"/></tooltip>
@@ -65,8 +60,5 @@
         <ToggleButton fx:id="errorChip" text="ERROR" selected="true" styleClass="ls-chip, ls-chip-error, small"/>
         <Separator orientation="VERTICAL"/>
     </FlowPane>
-    <SplitPane fx:id="logSplit" orientation="HORIZONTAL" VBox.vgrow="ALWAYS">
-        <ListView fx:id="list" styleClass="ls-log-list"/>
-        <fx:include fx:id="inspector" source="inspector.fxml"/>
-    </SplitPane>
+    <ListView fx:id="list" VBox.vgrow="ALWAYS" styleClass="ls-log-list"/>
 </VBox>

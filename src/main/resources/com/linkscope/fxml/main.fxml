@@ -52,7 +52,7 @@
                     <tooltip><Tooltip text="Delete the named preset"/></tooltip>
                 </Button>
                 <Separator orientation="VERTICAL"/>
-                <ToggleButton fx:id="logToggle" selected="true" styleClass="button-icon">
+                <ToggleButton fx:id="logToggle" selected="false" styleClass="button-icon">
                     <graphic><FontIcon iconLiteral="fth-terminal"/></graphic>
                     <tooltip><Tooltip text="Show / hide the log panel (Ctrl+`)"/></tooltip>
                 </ToggleButton>

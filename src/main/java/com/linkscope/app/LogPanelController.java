@@ -5,15 +5,13 @@ import com.linkscope.core.LogEntry.Kind;
 import com.linkscope.core.LogEntry.TimeMode;
 import com.linkscope.core.LogSink;
 import com.linkscope.core.PayloadCodec;
-import com.linkscope.core.protocol.ModbusDecoder;
-import com.linkscope.core.ui.InspectorController;
+import com.linkscope.core.ui.DecoderBridge;
 import com.linkscope.core.ui.Toasts;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -21,7 +19,6 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
-import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
@@ -48,8 +45,8 @@ import java.util.concurrent.Executors;
 
 /**
  * The shared log/console panel every module writes into. Hex/ASCII and timestamp modes
- * apply to all lines; module and kind chips plus a text filter narrow the view; a
- * selected TX/RX line can be opened in the payload inspector.
+ * apply to all lines; module and kind chips plus a text filter narrow the view; any
+ * TX/RX line can be sent to the Decoder tool.
  */
 public class LogPanelController {
     private static final String LOG_TAG = "LOG";
@@ -60,8 +57,7 @@ public class LogPanelController {
     @FXML private ToggleButton deltaToggle;
     @FXML private ToggleButton autoscrollToggle;
     @FXML private TextField filterField;
-    @FXML private ToggleButton inspectToggle;
-    @FXML private ToggleButton modbusToggle;
+    @FXML private Button decodeButton;
     @FXML private Button clearButton;
     @FXML private Button saveButton;
     @FXML private FlowPane chipRow;
@@ -69,10 +65,7 @@ public class LogPanelController {
     @FXML private ToggleButton rxChip;
     @FXML private ToggleButton infoChip;
     @FXML private ToggleButton errorChip;
-    @FXML private SplitPane logSplit;
     @FXML private ListView<LogEntry> list;
-    @FXML private Node inspector;
-    @FXML private InspectorController inspectorController;
 
     private final ObservableList<LogEntry> all = LogSink.get().entries();
     private final FilteredList<LogEntry> filtered = new FilteredList<>(all);
@@ -138,22 +131,17 @@ public class LogPanelController {
             }
         });
 
-        modbusToggle.selectedProperty().addListener((obs, old, now) -> list.refresh());
-        inspectToggle.selectedProperty().addListener((obs, old, shown) -> setInspectorVisible(shown));
-        setInspectorVisible(false);
-        list.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> {
-            if (inspectToggle.isSelected()) {
-                inspectorController.show(now);
-            }
-        });
-
+        decodeButton.disableProperty().bind(Bindings.createBooleanBinding(() -> {
+            LogEntry e = list.getSelectionModel().getSelectedItem();
+            return e == null || !e.hasPayload();
+        }, list.getSelectionModel().selectedItemProperty()));
+        decodeButton.setOnAction(e -> sendSelectedToDecoder());
         clearButton.setOnAction(e -> clear());
         saveButton.setOnAction(e -> save());
     }
 
     public void clear() {
         LogSink.get().clear();
-        inspectorController.clear();
     }
 
     public boolean isHex() {
@@ -168,25 +156,18 @@ public class LogPanelController {
         hexToggle.setSelected(!hexToggle.isSelected());
     }
 
-    /** Ctrl+I: show the inspector for the selected line, or hide it when already shown. */
-    public void toggleInspector() {
-        inspectToggle.setSelected(!inspectToggle.isSelected());
+    /** Ctrl+I: open the selected TX/RX line in the Decoder tool. */
+    public void sendSelectedToDecoder() {
+        LogEntry e = list.getSelectionModel().getSelectedItem();
+        if (e == null || !e.hasPayload()) {
+            Toasts.info("Select a TX or RX line first");
+            return;
+        }
+        DecoderBridge.open(e.payload());
     }
 
     private TimeMode timeMode() {
         return deltaToggle.isSelected() ? TimeMode.DELTA : timestampToggle.isSelected() ? TimeMode.ABSOLUTE : TimeMode.NONE;
-    }
-
-    private void setInspectorVisible(boolean shown) {
-        if (shown) {
-            if (!logSplit.getItems().contains(inspector)) {
-                logSplit.getItems().add(inspector);
-                logSplit.setDividerPositions(0.55);
-            }
-            inspectorController.show(list.getSelectionModel().getSelectedItem());
-        } else {
-            logSplit.getItems().remove(inspector);
-        }
     }
 
     // --- filtering --------------------------------------------------------------------
@@ -235,22 +216,22 @@ public class LogPanelController {
 
     private Label placeholder() {
         Label l = new Label("Nothing logged yet. Start a module above — every TX/RX line from every module lands here.\n"
-                + "Ctrl+L clears, Ctrl+H toggles hex, Ctrl+I opens the inspector for the selected line.");
+                + "Ctrl+L clears, Ctrl+H toggles hex, Ctrl+I opens the selected line in the Decoder.");
         l.getStyleClass().add("ls-hint");
         l.setWrapText(true);
         return l;
     }
 
     private ContextMenu contextMenu() {
-        MenuItem inspect = new MenuItem("Inspect payload");
-        inspect.setOnAction(e -> inspectToggle.setSelected(true));
+        MenuItem decode = new MenuItem("Send to Decoder");
+        decode.setOnAction(e -> sendSelectedToDecoder());
         MenuItem copyLines = new MenuItem("Copy line(s)");
         copyLines.setOnAction(e -> copy(selectedLines()));
         MenuItem copyHex = new MenuItem("Copy payload as hex");
         copyHex.setOnAction(e -> copy(selectedPayloads(true)));
         MenuItem copyAscii = new MenuItem("Copy payload as ASCII");
         copyAscii.setOnAction(e -> copy(selectedPayloads(false)));
-        return new ContextMenu(inspect, copyLines, copyHex, copyAscii);
+        return new ContextMenu(decode, copyLines, copyHex, copyAscii);
     }
 
     private String selectedLines() {
@@ -338,14 +319,7 @@ public class LogPanelController {
                     prev = filtered.get(idx - 1).time();
                 }
             }
-            String base = item.format(isHex(), timeMode(), prev);
-            String text = base;
-            if (modbusToggle.isSelected() && item.hasPayload()) {
-                text = ModbusDecoder.decode(item.payload())
-                        .map(frame -> base + "   ⇒ " + frame.summary())
-                        .orElse(base);
-            }
-            setText(text);
+            setText(item.format(isHex(), timeMode(), prev));
             getStyleClass().add(switch (item.kind()) {
                 case TX -> "log-tx";
                 case RX -> "log-rx";

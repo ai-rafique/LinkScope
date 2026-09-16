@@ -111,7 +111,23 @@ public class MainController {
         savePresetButton.setOnAction(e -> savePreset());
         deletePresetButton.setOnAction(e -> deletePreset());
 
-        logToggle.selectedProperty().addListener((obs, old, shown) -> setLogVisible(shown));
+        // The log panel starts hidden until the toolbar button is clicked; the choice is remembered.
+        logToggle.selectedProperty().addListener((obs, old, shown) -> {
+            setLogVisible(shown);
+            PREFS.putBoolean("logVisible", shown);
+        });
+        boolean logVisible = PREFS.getBoolean("logVisible", false);
+        logToggle.setSelected(logVisible);
+        setLogVisible(logVisible);
+
+        // "Send to Decoder" from the log (and Ctrl+I) lands here: switch module, load the bytes.
+        com.linkscope.core.ui.DecoderBridge.setHandler(bytes -> {
+            int idx = indexOf("decoder");
+            select(idx);
+            if (modules.get(idx).controller() instanceof com.linkscope.modules.decoder.DecoderController decoder) {
+                decoder.load(bytes);
+            }
+        });
         themeButton.setOnAction(e -> ThemeManager.toggle());
         ThemeManager.modeProperty().addListener((obs, old, now) -> updateThemeIcon());
         updateThemeIcon();
@@ -400,7 +416,7 @@ public class MainController {
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.H, KeyCombination.SHORTCUT_DOWN),
                 () -> logPanelController.toggleHex());
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.I, KeyCombination.SHORTCUT_DOWN),
-                () -> logPanelController.toggleInspector());
+                () -> logPanelController.sendSelectedToDecoder());
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN),
                 () -> quickSwitch.show(scene.getWindow()));
         scene.getAccelerators().put(new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN),
