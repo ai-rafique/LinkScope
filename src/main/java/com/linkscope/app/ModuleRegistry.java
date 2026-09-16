@@ -28,6 +28,7 @@ public final class ModuleRegistry {
             new ModuleDescriptor("http", "HTTP", "Web", "http.fxml", "fth-globe"),
             new ModuleDescriptor("websocket", "WebSocket", "Web", "websocket.fxml", "fth-repeat"),
             new ModuleDescriptor("ssh", "SSH", "Remote", "ssh.fxml", "fth-terminal"),
+            new ModuleDescriptor("tunnels", "Tunnels", "Remote", "tunnels.fxml", "fth-share-2"),
             new ModuleDescriptor("decoder", "Decoder", "Tools", "decoder.fxml", "fth-columns"),
             new ModuleDescriptor("netscan", "Net Scan", "Tools", "netscan.fxml", "fth-search"),
             new ModuleDescriptor("ports", "Ports", "Tools", "portscan.fxml", "fth-server")

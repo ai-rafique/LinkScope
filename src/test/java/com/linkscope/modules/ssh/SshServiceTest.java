@@ -57,7 +57,7 @@ class SshServiceTest {
     }
 
     @Test
-    void liveExecAndShellRoundTrip() {
+    void liveExecAndShellRoundTrip() throws Exception {
         Assumptions.assumeFalse(TestSupport.integrationSkipped(), "SKIP_INTEGRATION set");
         String target = System.getenv("LINKSCOPE_SSH_TARGET");
         Assumptions.assumeTrue(target != null && target.contains("@") && target.contains(":"), "LINKSCOPE_SSH_TARGET not set");
@@ -86,6 +86,21 @@ class SshServiceTest {
 
         service.sendLine("echo shell-$((7*6))");
         awaitTrue("shell echo", Duration.ofSeconds(20), () -> console.toString().contains("shell-42"));
+
+        // A local forward back to the server's own SSH port must hand us an SSH banner.
+        int localPort;
+        try (java.net.ServerSocket probe = new java.net.ServerSocket(0)) {
+            localPort = probe.getLocalPort();
+        }
+        SshService.Forward forward = new SshService.Forward(true, "127.0.0.1", localPort, "127.0.0.1", port);
+        service.addForward(forward);
+        try (java.net.Socket through = new java.net.Socket("127.0.0.1", localPort)) {
+            through.setSoTimeout(10_000);
+            byte[] banner = new byte[8];
+            int n = through.getInputStream().readNBytes(banner, 0, 8);
+            assertEquals("SSH-2.0-", new String(banner, 0, n, java.nio.charset.StandardCharsets.US_ASCII));
+        }
+        service.removeForward(forward);
 
         service.stop();
         awaitTrue("disconnected", () -> service.status() == ModuleStatus.DISCONNECTED);
