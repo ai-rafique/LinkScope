@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.linkscope.modules.sftp.SftpController" styleClass="ls-module">
+    <fx:include fx:id="connection" source="ssh-connection.fxml"/>
+
+    <VBox styleClass="ls-panel" VBox.vgrow="ALWAYS">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Remote files" styleClass="ls-panel-title"/>
+            <Button fx:id="homeButton" styleClass="button-icon">
+                <graphic><FontIcon iconLiteral="fth-home"/></graphic>
+                <tooltip><Tooltip text="Login directory"/></tooltip>
+            </Button>
+            <Button fx:id="upButton" styleClass="button-icon">
+                <graphic><FontIcon iconLiteral="fth-corner-left-up"/></graphic>
+                <tooltip><Tooltip text="Parent folder"/></tooltip>
+            </Button>
+            <TextField fx:id="pathField" HBox.hgrow="ALWAYS" styleClass="ls-mono" promptText="/remote/path"/>
+            <Button fx:id="goButton" text="Go"/>
+            <Button fx:id="refreshButton" styleClass="button-icon">
+                <graphic><FontIcon iconLiteral="fth-refresh-cw"/></graphic>
+                <tooltip><Tooltip text="Refresh listing"/></tooltip>
+            </Button>
+        </HBox>
+        <TableView fx:id="table" VBox.vgrow="ALWAYS" minHeight="140">
+            <columns>
+                <TableColumn fx:id="nameColumn" text="Name" prefWidth="360"/>
+                <TableColumn fx:id="sizeColumn" text="Size" prefWidth="90"/>
+                <TableColumn fx:id="modifiedColumn" text="Modified" prefWidth="150"/>
+                <TableColumn fx:id="permissionsColumn" text="Permissions" prefWidth="120"/>
+            </columns>
+        </TableView>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button fx:id="downloadButton" text="Download" styleClass="accent">
+                <graphic><FontIcon iconLiteral="fth-download"/></graphic>
+                <tooltip><Tooltip text="Save the selected file to this PC"/></tooltip>
+            </Button>
+            <Button fx:id="uploadButton" text="Upload">
+                <graphic><FontIcon iconLiteral="fth-upload"/></graphic>
+                <tooltip><Tooltip text="Send one or more local files into the current folder"/></tooltip>
+            </Button>
+            <Label text="Name" styleClass="text-muted" minWidth="-Infinity"/>
+            <TextField fx:id="nameField" prefWidth="220" promptText="for new folder / rename"/>
+            <Button fx:id="mkdirButton" text="New folder">
+                <graphic><FontIcon iconLiteral="fth-folder-plus"/></graphic>
+            </Button>
+            <Button fx:id="renameButton" text="Rename">
+                <graphic><FontIcon iconLiteral="fth-edit-2"/></graphic>
+                <tooltip><Tooltip text="Rename the selected entry to the Name box value"/></tooltip>
+            </Button>
+            <Button fx:id="deleteButton" text="Delete">
+                <graphic><FontIcon iconLiteral="fth-trash-2"/></graphic>
+                <tooltip><Tooltip text="Click twice within 4 seconds. Folders must be empty."/></tooltip>
+            </Button>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <ProgressBar fx:id="progressBar" prefWidth="160" progress="0"/>
+            <Label fx:id="progressLabel" styleClass="text-muted, small"/>
+            <Button fx:id="cancelButton" text="Cancel" styleClass="small"/>
+        </HBox>
+        <Label fx:id="statusLabel" styleClass="text-muted, small"/>
+    </VBox>
+
+    <Label styleClass="ls-hint" wrapText="true"
+           text="Browse and move files over the SSH session. Tick “Use the SSH tab's connection” to reuse a login from the SSH tab, or connect here on its own. Transfers show progress and can be cancelled; every operation is also logged under SFTP."/>
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+</VBox>

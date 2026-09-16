@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.linkscope.core.ui.StatusBadge?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.linkscope.modules.telnet.TelnetController" styleClass="ls-module">
+    <VBox styleClass="ls-panel">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Connection" styleClass="ls-panel-title"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <StatusBadge fx:id="statusBadge"/>
+        </HBox>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Host" styleClass="text-muted" minWidth="-Infinity"/>
+            <TextField fx:id="hostField" HBox.hgrow="ALWAYS" text="127.0.0.1"/>
+            <Label text="Port" styleClass="text-muted" minWidth="-Infinity"/>
+            <TextField fx:id="portField" text="23" prefWidth="72"/>
+            <Button fx:id="connectButton" text="Connect" styleClass="accent"/>
+        </HBox>
+    </VBox>
+
+    <HBox spacing="16" VBox.vgrow="ALWAYS">
+        <VBox styleClass="ls-panel" HBox.hgrow="ALWAYS">
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Console" styleClass="ls-panel-title"/>
+                <CheckBox fx:id="localEchoCheck" text="Local echo">
+                    <tooltip><Tooltip text="Show what you send in the console. Turn on when the server does not echo (the log shows the negotiated ECHO option)."/></tooltip>
+                </CheckBox>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Button fx:id="interruptButton" text="Interrupt" styleClass="small">
+                    <tooltip><Tooltip text="Send the telnet Interrupt Process command (IAC IP), the equivalent of Ctrl+C"/></tooltip>
+                </Button>
+                <Button fx:id="clearConsoleButton" text="Clear" styleClass="small">
+                    <graphic><FontIcon iconLiteral="fth-trash-2"/></graphic>
+                </Button>
+            </HBox>
+            <TextArea fx:id="consoleArea" editable="false" wrapText="true" styleClass="ls-mono, ls-console" VBox.vgrow="ALWAYS"
+                      promptText="Server output appears here with option negotiation removed and colours stripped."/>
+            <fx:include fx:id="sendBar" source="send-bar.fxml"/>
+        </VBox>
+        <fx:include fx:id="history" source="history-list.fxml" minWidth="240" prefWidth="280"/>
+    </HBox>
+
+    <Label styleClass="ls-hint" wrapText="true"
+           text="Telnet with proper option negotiation: the server's DO/WILL requests are answered (echo and suppress-go-ahead accepted, everything else declined) and logged, so old lab gear and telnet daemons behave. Line ending defaults to CRLF; switch the bar to HEX for raw bytes."/>
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+</VBox>
