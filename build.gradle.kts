@@ -74,6 +74,21 @@ tasks.test {
     environment("SKIP_INTEGRATION", System.getenv("SKIP_INTEGRATION") ?: "")
 }
 
+// --- Local broker stack for development and integration tests (dev/docker-compose.yml) ------
+// `./gradlew brokersUp` starts NATS, Redpanda and Mosquitto; `brokersDown` stops them and wipes volumes.
+
+tasks.register<Exec>("brokersUp") {
+    group = "development"
+    description = "Starts the local NATS, Redpanda and Mosquitto brokers with Docker Compose."
+    commandLine("docker", "compose", "-f", "dev/docker-compose.yml", "up", "-d")
+}
+
+tasks.register<Exec>("brokersDown") {
+    group = "development"
+    description = "Stops the local brokers and removes their volumes."
+    commandLine("docker", "compose", "-f", "dev/docker-compose.yml", "down", "-v")
+}
+
 // --- Windows distribution without WiX: Inno Setup installer + portable zip -------------------
 // `./gradlew innoSetup` -> build/installer/LinkScope-<version>-setup.exe (needs Inno Setup 6;
 // looked up via INNO_SETUP_HOME, the default install folders, then PATH).

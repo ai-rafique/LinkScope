@@ -27,9 +27,3 @@ presets/local/
 # OS cruft
 .DS_Store
 Thumbs.db
-
-
-# Local broker stack — kept out of history on purpose
-docker-compose.yml
-mosquitto.conf
-mosquitto/

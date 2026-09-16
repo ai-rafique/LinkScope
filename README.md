@@ -99,9 +99,17 @@ Outputs land in `build/installer/`. The version comes from `build.gradle.kts`.
 
 ## Local brokers for testing
 
-A `docker-compose.yml` (kept out of the repository) brings up NATS, a Kafka-compatible
-Redpanda and Mosquitto on their default ports: `localhost:4222`, `localhost:9092`,
-`localhost:1883`. The app's field defaults and `.env.example` point at these.
+`dev/docker-compose.yml` brings up NATS, a Kafka-compatible Redpanda and Mosquitto on
+their default ports: `localhost:4222`, `localhost:9092`, `localhost:1883`. The app's
+field defaults and `.env.example` point at these.
+
+```
+./gradlew brokersUp      # docker compose -f dev/docker-compose.yml up -d
+./gradlew brokersDown    # stop and wipe volumes
+```
+
+Host ports can be overridden through `dev/.env` (see `dev/.env.example`), useful where
+1883 is inside a reserved range. Details in `dev/README.md`.
 
 ## Tests
 

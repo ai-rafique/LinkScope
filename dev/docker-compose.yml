@@ -1,0 +1,52 @@
+# LinkScope local broker stack — NATS, Kafka (via Redpanda), MQTT.
+# Usage: docker compose up -d
+# Tear down + wipe volumes: docker compose down -v
+
+services:
+  nats:
+    image: nats:latest
+    container_name: linkscope-nats
+    ports:
+      - "4222:4222"   # client connections
+      - "8222:8222"   # HTTP monitoring UI -> http://localhost:8222
+    command: ["-js", "-m", "8222"]   # -js enables JetStream if you want it later
+    restart: unless-stopped
+
+  # Redpanda: Kafka wire-protocol compatible, single-binary, far lighter
+  # than a real Kafka+ZooKeeper stack for local dev/testing. LinkScope's
+  # kafka-clients (java) module talks to it exactly like real Kafka.
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: linkscope-kafka
+    command:
+      - redpanda
+      - start
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --overprovisioned
+      - --node-id=0
+      - --check=false
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://localhost:9092
+      - --pandaproxy-addr=0.0.0.0:8082
+      - --advertise-pandaproxy-addr=localhost:8082
+    ports:
+      - "9092:9092"   # Kafka client protocol (bootstrap.servers=localhost:9092)
+      - "8082:8082"   # HTTP proxy (optional, for REST-based testing)
+      - "9644:9644"   # Admin API / metrics
+    restart: unless-stopped
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: linkscope-mqtt
+    ports:
+      - "${MQTT_PORT:-1883}:1883"   # MQTT
+      - "${MQTT_WS_PORT:-9001}:9001"   # MQTT over WebSockets
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+    restart: unless-stopped
+
+volumes:
+  mosquitto-data:
