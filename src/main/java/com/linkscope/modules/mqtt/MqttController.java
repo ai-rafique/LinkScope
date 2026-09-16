@@ -17,7 +17,7 @@ import java.util.Map;
 
 /**
  * MQTT tab: the shared pub/sub panel bound to an {@link MqttService}, plus the MQTT-only
- * options from CLAUDE.md §2.4 (client id, subscribe/publish QoS, retain) in the panel's
+ * options (client id, subscribe/publish QoS, retain) in the panel's
  * options row.
  */
 public class MqttController implements ModuleController {

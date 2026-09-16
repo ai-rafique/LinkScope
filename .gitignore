@@ -28,13 +28,6 @@ presets/local/
 .DS_Store
 Thumbs.db
 
-# --- Claude Code / AI tooling: local state, never committed ---
-.claude/
-.claude/settings.local.json
-.mcp.json
-CLAUDE.md
-CLAUDE.local.md
-.clinerules/
 
 # Local broker stack — kept out of history on purpose
 docker-compose.yml

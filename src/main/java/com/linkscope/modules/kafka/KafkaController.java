@@ -16,7 +16,7 @@ import java.util.Map;
 
 /**
  * Kafka tab: the shared pub/sub panel bound to a {@link KafkaService}, plus the three
- * Kafka-only options from CLAUDE.md §2.4 (consumer group id, partition selector,
+ * Kafka-only options (consumer group id, partition selector,
  * start-from-beginning) added to the panel's options row.
  */
 public class KafkaController implements ModuleController {

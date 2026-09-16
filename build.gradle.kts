@@ -164,7 +164,8 @@ tasks.register<Copy>("linuxDeb") {
 }
 
 // badass-runtime: trimmed jlink image from the jdeps-suggested JDK module list,
-// then jpackage in classpath mode. No module-info.java anywhere (see CLAUDE.md §5).
+// then jpackage in classpath mode. No module-info.java anywhere: the app stays non-modular
+// because several dependencies only ship as automatic modules.
 runtime {
     options.set(listOf("--strip-debug", "--compress", "zip-6", "--no-header-files", "--no-man-pages"))
     // jdeps misses modules that are only reached reflectively or via service loaders.
