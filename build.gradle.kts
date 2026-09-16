@@ -44,6 +44,9 @@ dependencies {
     implementation("org.apache.kafka:kafka-clients:4.3.0")
     implementation("org.eclipse.paho:org.eclipse.paho.mqttv5.client:1.2.5")
 
+    // Remote tools: SSH via the maintained JSch fork (pure Java; ed25519 and rsa-sha2 supported).
+    implementation("com.github.mwiede:jsch:0.2.25")
+
     // Logging: kafka-clients and Paho log via SLF4J; LinkScope ships its own provider
     // (core/slf4j) that forwards WARN/ERROR into the app log. Already transitive, pinned here
     // so the provider's REQUESTED_API_VERSION stays in step with the API on the classpath.

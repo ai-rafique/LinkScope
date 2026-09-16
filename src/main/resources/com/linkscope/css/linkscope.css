@@ -145,6 +145,11 @@
     -fx-text-fill: -color-danger-fg;
 }
 
+.ls-console,
+.ls-console .content {
+    -fx-background-color: -color-bg-inset;
+}
+
 .send-bar {
     -fx-padding: 0;
 }
