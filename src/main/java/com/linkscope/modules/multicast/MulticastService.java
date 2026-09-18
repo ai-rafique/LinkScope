@@ -5,17 +5,13 @@ import com.linkscope.core.ModuleStatus;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.InterfaceAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.StandardSocketOptions;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -133,7 +129,12 @@ public final class MulticastService extends AbstractService {
             }
         } catch (IOException e) {
             if (running) {
-                logError(socket == null ? "Could not join " + group + ":" + port : "Receive error", e);
+                String where = nif == null ? "default interface" : describe(nif);
+                logError(socket == null ? "Could not join " + group + ":" + port + " on " + where : "Receive error", e);
+                if (socket == null && e.getMessage() != null && e.getMessage().toLowerCase().contains("forbidden")) {
+                    logError("Port " + port + " is likely inside a Windows reserved range; check with "
+                            + "'netsh interface ipv4 show excludedportrange protocol=udp'");
+                }
                 setStatus(ModuleStatus.ERROR);
             }
         } finally {
@@ -184,38 +185,14 @@ public final class MulticastService extends AbstractService {
 
     // --- interfaces -----------------------------------------------------------------
 
-    /** Interfaces that are up and multicast-capable, non-loopback first. Never throws. */
+    /** Interfaces that are up and multicast-capable: physical adapters first, then virtual, then loopback. */
     public static List<NetworkInterface> candidateInterfaces() {
-        List<NetworkInterface> out = new ArrayList<>();
-        List<NetworkInterface> loopbacks = new ArrayList<>();
-        try {
-            for (NetworkInterface nif : Collections.list(NetworkInterface.getNetworkInterfaces())) {
-                try {
-                    if (!nif.isUp() || !nif.supportsMulticast() || !hasIpv4(nif)) {
-                        continue;
-                    }
-                    (nif.isLoopback() ? loopbacks : out).add(nif);
-                } catch (SocketException ignored) {
-                    // skip broken interface
-                }
-            }
-        } catch (SocketException ignored) {
-            // no interfaces at all
-        }
-        out.addAll(loopbacks);
-        return out;
+        return com.linkscope.core.NetInterfaces.candidates();
     }
 
-    /** Human-readable label: display name plus first IPv4 address. */
+    /** Human-readable label: display name plus first IPv4 address, tagged when virtual. */
     public static String describe(NetworkInterface nif) {
-        String ip = "";
-        for (InterfaceAddress a : nif.getInterfaceAddresses()) {
-            if (a.getAddress() instanceof Inet4Address) {
-                ip = " (" + a.getAddress().getHostAddress() + ")";
-                break;
-            }
-        }
-        return nif.getDisplayName() + ip;
+        return com.linkscope.core.NetInterfaces.describe(nif);
     }
 
     static NetworkInterface resolveInterface(String name) throws SocketException {
@@ -228,14 +205,5 @@ public final class MulticastService extends AbstractService {
         }
         List<NetworkInterface> candidates = candidateInterfaces();
         return candidates.isEmpty() ? null : candidates.get(0);
-    }
-
-    private static boolean hasIpv4(NetworkInterface nif) {
-        for (InterfaceAddress a : nif.getInterfaceAddresses()) {
-            if (a.getAddress() instanceof Inet4Address) {
-                return true;
-            }
-        }
-        return false;
     }
 }

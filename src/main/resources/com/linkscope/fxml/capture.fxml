@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.linkscope.core.ui.StatusBadge?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.linkscope.modules.capture.CaptureController" styleClass="ls-module">
+    <VBox styleClass="ls-panel">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Capture" styleClass="ls-panel-title"/>
+            <Label fx:id="deviceHint" styleClass="text-muted, small"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <StatusBadge fx:id="statusBadge"/>
+        </HBox>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Interface" styleClass="text-muted" minWidth="-Infinity"/>
+            <ComboBox fx:id="deviceCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" minWidth="200" promptText="Listing interfaces…"/>
+            <Button fx:id="refreshButton" styleClass="button-icon">
+                <graphic><FontIcon iconLiteral="fth-refresh-cw"/></graphic>
+                <tooltip><Tooltip text="Rescan capture interfaces"/></tooltip>
+            </Button>
+            <Button fx:id="startButton" text="Start" styleClass="accent" minWidth="-Infinity"/>
+        </HBox>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Capture filter" styleClass="text-muted" minWidth="-Infinity"/>
+            <TextField fx:id="bpfField" HBox.hgrow="ALWAYS" styleClass="ls-mono" promptText="udp port 16004      host 192.168.1.10      not port 22      ether multicast      (BPF syntax, applied in the driver)">
+                <tooltip><Tooltip text="Berkeley Packet Filter, same syntax as tcpdump and Wireshark capture filters: host 192.168.1.10, udp port 16004, not port 22, ether multicast..."/></tooltip>
+            </TextField>
+            <CheckBox fx:id="promiscuousCheck" text="Promiscuous" selected="true" minWidth="-Infinity">
+                <tooltip><Tooltip text="Also capture frames not addressed to this machine (needed on hubs and mirrored ports)"/></tooltip>
+            </CheckBox>
+        </HBox>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Display filter" styleClass="text-muted" minWidth="-Infinity"/>
+            <TextField fx:id="displayFilterField" HBox.hgrow="ALWAYS" styleClass="ls-mono"
+                       promptText="udp and port == 16004      ip.addr == 192.168.1.5      mqtt or nats      contains &quot;hello&quot;      len &gt; 100">
+                <tooltip><Tooltip text="Filters the table as you type. Fields: ip.addr ip.src ip.dst port srcport dstport len proto app info. Bare names: tcp udp arp icmp ipv6 dns http mqtt nats kafka modbus. Combine with and / or / not and parentheses."/></tooltip>
+            </TextField>
+            <Label fx:id="filterStatusLabel" styleClass="text-muted, small"/>
+            <ToggleButton fx:id="followToggle" text="Follow" selected="true" styleClass="small">
+                <tooltip><Tooltip text="Keep the newest packet in view while nothing is selected"/></tooltip>
+            </ToggleButton>
+            <Button fx:id="openButton" text="Open…" styleClass="small">
+                <graphic><FontIcon iconLiteral="fth-folder"/></graphic>
+                <tooltip><Tooltip text="Load a .pcap file into the table"/></tooltip>
+            </Button>
+            <Button fx:id="saveButton" text="Save…" styleClass="small">
+                <graphic><FontIcon iconLiteral="fth-download"/></graphic>
+                <tooltip><Tooltip text="Save the shown packets as .pcap (opens in Wireshark)"/></tooltip>
+            </Button>
+            <Button fx:id="clearButton" text="Clear" styleClass="small">
+                <graphic><FontIcon iconLiteral="fth-trash-2"/></graphic>
+            </Button>
+        </HBox>
+        <Label fx:id="statsLabel" styleClass="text-muted, small"/>
+    </VBox>
+
+    <SplitPane orientation="VERTICAL" dividerPositions="0.62" VBox.vgrow="ALWAYS">
+        <TableView fx:id="table" minHeight="120">
+            <columns>
+                <TableColumn fx:id="numberColumn" text="No." prefWidth="64"/>
+                <TableColumn fx:id="timeColumn" text="Time" prefWidth="96"/>
+                <TableColumn fx:id="srcColumn" text="Source" prefWidth="150"/>
+                <TableColumn fx:id="dstColumn" text="Destination" prefWidth="150"/>
+                <TableColumn fx:id="srcPortColumn" text="Src port" prefWidth="70"/>
+                <TableColumn fx:id="dstPortColumn" text="Dst port" prefWidth="70"/>
+                <TableColumn fx:id="protocolColumn" text="Protocol" prefWidth="80"/>
+                <TableColumn fx:id="lengthColumn" text="Len" prefWidth="60"/>
+                <TableColumn fx:id="infoColumn" text="Info" prefWidth="480"/>
+            </columns>
+        </TableView>
+        <TextArea fx:id="detailArea" editable="false" wrapText="false" styleClass="ls-mono" minHeight="90"
+                  promptText="Select a packet to see its layers and payload hex dump."/>
+    </SplitPane>
+
+    <Label styleClass="ls-hint" wrapText="true"
+           text="Frames come straight off the adapter, so traffic shows even when another program owns the port. Right-click a packet to filter its conversation or send it to the Decoder."/>
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16"/>
+    </padding>
+</VBox>

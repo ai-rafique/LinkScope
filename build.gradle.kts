@@ -48,6 +48,10 @@ dependencies {
     // Remote tools: SSH via the maintained JSch fork (pure Java; ed25519 and rsa-sha2 supported).
     implementation("com.github.mwiede:jsch:0.2.25")
 
+    // Packet capture (Capture tool): pcap4j over JNA; needs Npcap on Windows or libpcap on Linux at runtime.
+    implementation("org.pcap4j:pcap4j-core:1.8.2")
+    implementation("org.pcap4j:pcap4j-packetfactory-static:1.8.2")
+
     // Logging: kafka-clients and Paho log via SLF4J; LinkScope ships its own provider
     // (core/slf4j) that forwards WARN/ERROR into the app log. Already transitive, pinned here
     // so the provider's REQUESTED_API_VERSION stays in step with the API on the classpath.

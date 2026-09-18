@@ -31,6 +31,7 @@ public final class ModuleRegistry {
             new ModuleDescriptor("tunnels", "Tunnels", "Remote", "tunnels.fxml", "fth-share-2"),
             new ModuleDescriptor("sftp", "SFTP", "Remote", "sftp.fxml", "fth-folder"),
             new ModuleDescriptor("telnet", "Telnet", "Remote", "telnet.fxml", "fth-type"),
+            new ModuleDescriptor("capture", "Capture", "Tools", "capture.fxml", "fth-eye"),
             new ModuleDescriptor("decoder", "Decoder", "Tools", "decoder.fxml", "fth-columns"),
             new ModuleDescriptor("netscan", "Net Scan", "Tools", "netscan.fxml", "fth-search"),
             new ModuleDescriptor("ports", "Ports", "Tools", "portscan.fxml", "fth-server")

@@ -18,7 +18,8 @@ setup as a named preset, and shows its state with an icon and a word, never colo
 - **UDP** – listen on a port, send to any host, broadcast, reply to the last sender.
 - **TCP** – client and server in one tab, both live at once. Auto-reconnect on the client;
   many clients on the server with per-client or broadcast send.
-- **Multicast** – join a group on a chosen interface with TTL and loopback control.
+- **Multicast** – join a group on a chosen interface with TTL and loopback control. The
+  Auto choice prefers physical adapters over virtual ones (Hyper-V, VPN, WSL, loopback).
 
 **Brokers** (one shared panel: broker list, subscriptions, publish box, message table)
 - **NATS** – subjects with `*` and `>` wildcards, request/reply.
@@ -49,6 +50,17 @@ setup as a named preset, and shows its state with an icon and a word, never colo
 Tunnels and SFTP can reuse the SSH tab's login instead of connecting again.
 
 **Tools**
+- **Capture** – a packet sniffer for one interface: frames are read straight off the adapter,
+  so traffic shows up even when another program owns the port. Each packet is listed with
+  time, source, destination, ports, protocol, length and a one-line summary (ARP, ICMP,
+  DNS, TCP flags, Modbus TCP, and well-known ports such as MQTT, NATS, Kafka). A capture
+  filter in BPF syntax (`udp port 16004`, `host 192.168.1.10`) limits what the driver
+  hands over; a display filter narrows the table as you type, with fields such as
+  `ip.addr == 192.168.1.`, `port == 1883`, `len > 100`, `contains "hello"`, bare names
+  like `udp`, `arp`, `mqtt`, and `and` / `or` / `not` with parentheses. Right-click a
+  packet to filter its conversation or send its payload to the Decoder. Captures open and
+  save as `.pcap`, so they round-trip with Wireshark. Needs Npcap on Windows and libpcap on
+  Linux (see Install).
 - **Decoder** – paste bytes, describe the layout as field widths (`2 3 5 6 4`, with hints
   like `4f 2i 5s` and repeated groups `[2 4]*3`), and read every field as integers, floats
   and text in both byte orders. Any log line can be sent here.
@@ -84,6 +96,19 @@ Download from the Releases page or the CI artifacts:
 
 Both bundle a trimmed Java runtime; nothing else is required.
 
+The Capture tool is the one exception: it needs the platform packet-capture driver.
+
+- **Windows**: install [Npcap](https://npcap.com/) (the free installer, default options).
+  Wireshark installs it too.
+- **Linux**: `sudo apt install libpcap0.8` (or your distribution's equivalent). Capturing
+  needs raw-socket rights, so either run LinkScope as root or grant the bundled runtime
+  the capability once:
+  `sudo setcap cap_net_raw,cap_net_admin=eip /opt/linkscope/lib/runtime/bin/java`
+  (adjust the path for a tarball install). Ports scanning benefits from the same grant.
+
+Every other module works without the driver; the Capture tab just reports that it is
+missing.
+
 ## Build from source
 
 Requires JDK 21 (Eclipse Temurin recommended). Gradle comes with the wrapper.
@@ -117,7 +142,9 @@ Host ports can be overridden through `dev/.env` (see `dev/.env.example`), useful
 ## Tests
 
 `./gradlew build` runs the JUnit suite. Loopback tests (UDP, TCP, multicast, HTTP,
-WebSocket, Telnet, Modbus framing, Net Scan, Ports) run everywhere. Broker tests run when
+WebSocket, Telnet, Modbus framing, Net Scan, Ports, packet dissection and display filters)
+run everywhere. The pcap round-trip and loopback capture tests skip without Npcap/libpcap.
+Broker tests run when
 the brokers are reachable and skip otherwise; set `SKIP_INTEGRATION=1` to skip them
 outright, as CI does. Hardware-dependent tests read their targets from environment
 variables: `LINKSCOPE_SERIAL_PAIR=COM5,COM6` for a virtual serial pair and
@@ -126,8 +153,8 @@ variables: `LINKSCOPE_SERIAL_PAIR=COM5,COM6` for a virtual serial pair and
 ## Dependencies
 
 JavaFX, AtlantaFX (theme), Ikonli (icons), jnats, kafka-clients, Eclipse Paho MQTT v5,
-jSerialComm, the maintained JSch fork, Jackson, dotenv-java, SLF4J API. HTTP and WebSocket
-use the JDK's built-in clients. Java-WebSocket is used only as a test echo server.
+jSerialComm, the maintained JSch fork, pcap4j (packet capture, over Npcap/libpcap),
+Jackson, dotenv-java, SLF4J API. HTTP and WebSocket use the JDK's built-in clients. Java-WebSocket is used only as a test echo server.
 
 ## License
 
