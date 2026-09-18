@@ -6,7 +6,8 @@ plugins {
 }
 
 group = "com.linkscope"
-version = "0.1.0-SNAPSHOT"
+// major.minor.patch; drives the status bar text, installer file names and jpackage's app version.
+version = "0.2.0"
 
 repositories {
     mavenCentral()
@@ -66,6 +67,15 @@ dependencies {
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
+}
+
+// Stamp the build version into the resource the status bar reads (see core/AppInfo).
+tasks.processResources {
+    val appVersion = project.version.toString()
+    inputs.property("appVersion", appVersion)
+    filesMatching("com/linkscope/version.properties") {
+        expand("version" to appVersion)
+    }
 }
 
 tasks.test {

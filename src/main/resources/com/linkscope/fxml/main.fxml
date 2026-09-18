@@ -72,5 +72,13 @@
                 <fx:include fx:id="logPanel" source="log-panel.fxml"/>
             </SplitPane>
         </center>
+        <bottom>
+            <!-- Status bar: current module state on the left, version and rights on the right. -->
+            <HBox styleClass="ls-statusbar" alignment="CENTER_LEFT" spacing="8">
+                <Label fx:id="statusText" styleClass="ls-status-text"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Label fx:id="versionLabel" styleClass="ls-status-version"/>
+            </HBox>
+        </bottom>
     </BorderPane>
 </StackPane>

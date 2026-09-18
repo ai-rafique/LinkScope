@@ -3,7 +3,9 @@ package com.linkscope.app;
 import com.linkscope.app.ModuleRegistry.ModuleDescriptor;
 import com.linkscope.core.LogEntry;
 import com.linkscope.core.LogSink;
+import com.linkscope.core.AppInfo;
 import com.linkscope.core.ModuleController;
+import com.linkscope.core.ModuleStatus;
 import com.linkscope.core.Preset;
 import com.linkscope.core.PresetStore;
 import com.linkscope.core.ui.StatusBadge;
@@ -81,6 +83,9 @@ public class MainController {
     @FXML private ToggleButton logToggle;
     @FXML private Button themeButton;
     @FXML private FontIcon themeIcon;
+    @FXML private Label statusText;
+    @FXML private Label versionLabel;
+    private final javafx.beans.value.ChangeListener<ModuleStatus> statusTextUpdater = (obs, old, now) -> updateStatusText();
 
     /** A sidebar group: its clickable header row, chevron, member modules and collapsed state. */
     private static final class Group {
@@ -164,7 +169,22 @@ public class MainController {
                 installAccelerators(scene);
             }
         });
-        LogSink.get().info(LOG_TAG, "LinkScope ready — " + modules.size() + " modules. Presets: " + presets.path());
+        versionLabel.setText(AppInfo.statusLine());
+        versionLabel.setTooltip(new Tooltip(AppInfo.details()));
+        updateStatusText();
+        LogSink.get().info(LOG_TAG, AppInfo.NAME + " " + AppInfo.version() + " ready — " + modules.size()
+                + " modules. Presets: " + presets.path());
+    }
+
+    /** Left side of the status bar: the selected module and its current state. */
+    private void updateStatusText() {
+        if (current == null) {
+            statusText.setText("");
+            return;
+        }
+        ModuleStatus s = current.controller().statusProperty().get();
+        String label = current.controller().statusLabels().getOrDefault(s, s.label());
+        statusText.setText(current.descriptor().title() + " · " + label);
     }
 
     /** Stops every module. Called from the Application's stop(). */
@@ -360,7 +380,14 @@ public class MainController {
     }
 
     private void select(ModuleEntry entry) {
+        if (current != null) {
+            current.controller().statusProperty().removeListener(statusTextUpdater);
+        }
         current = entry;
+        entry.controller().statusProperty().addListener(statusTextUpdater);
+        if (statusText != null) {
+            updateStatusText();
+        }
         Group g = groupOf(entry);
         if (g != null && g.collapsed) {
             g.collapsed = false;   // a shortcut or the switcher picked a hidden module: reveal its group

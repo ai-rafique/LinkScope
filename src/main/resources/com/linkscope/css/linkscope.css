@@ -104,6 +104,25 @@
     -fx-background-color: -color-bg-default;
 }
 
+/* --- status bar ------------------------------------------------------------- */
+
+.ls-statusbar {
+    -fx-padding: 3px 12px;
+    -fx-background-color: -color-bg-subtle;
+    -fx-border-color: -color-border-default transparent transparent transparent;
+    -fx-border-width: 1px 0 0 0;
+}
+
+.ls-status-text {
+    -fx-font-size: 11px;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.ls-status-version {
+    -fx-font-size: 11px;
+    -fx-text-fill: -color-fg-muted;
+}
+
 .ls-section-title {
     -fx-font-size: 14px;
     -fx-font-weight: bold;

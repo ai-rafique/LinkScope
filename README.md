@@ -65,6 +65,9 @@ Any string field may contain `${VAR}` placeholders, resolved from a `.env` file 
 working directory first and the process environment second. Secrets (passwords, tokens)
 are only stored in presets as placeholders. See `.env.example`.
 
+**Status bar** – the selected module and its state on the left; the version
+(major.minor.patch) and rights line on the right, with build details in its tooltip.
+
 **Keyboard** – `Ctrl+K` jump to a module, `Ctrl+1..9` first nine modules, `Ctrl+B`
 collapse the sidebar, `` Ctrl+` `` show/hide the log, `Ctrl+L` clear it, `Ctrl+H` hex,
 `Ctrl+I` send the selected log line to the Decoder, `Enter` sends in any payload field,
