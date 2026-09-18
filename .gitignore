@@ -27,3 +27,7 @@ presets/local/
 # OS cruft
 .DS_Store
 Thumbs.db
+
+# Third-party installers staged for bundling (fetched by gradle, never committed)
+packaging/npcap/
+branding/pcap.exe

@@ -98,8 +98,9 @@ Both bundle a trimmed Java runtime; nothing else is required.
 
 The Capture tool is the one exception: it needs the platform packet-capture driver.
 
-- **Windows**: install [Npcap](https://npcap.com/) (the free installer, default options).
-  Wireshark installs it too.
+- **Windows**: the setup.exe bundles the [Npcap](https://npcap.com/) installer and offers
+  to run it when the machine has none (its own wizard appears; keep the defaults). The
+  portable zip does not include it; install Npcap yourself, or Wireshark, which ships it.
 - **Linux**: `sudo apt install libpcap0.8` (or your distribution's equivalent). Capturing
   needs raw-socket rights, so either run LinkScope as root or grant the bundled runtime
   the capability once:
@@ -123,7 +124,9 @@ Requires JDK 21 (Eclipse Temurin recommended). Gradle comes with the wrapper.
 ./gradlew appImageTar      # Linux portable tarball
 ```
 
-Outputs land in `build/installer/`. The version comes from `build.gradle.kts`.
+Outputs land in `build/installer/`. The version comes from `build.gradle.kts`. The
+`innoSetup` task fetches the Npcap installer from npcap.com once into `build/npcap/`;
+to build offline, put `npcap-<version>.exe` under `packaging/npcap/` instead.
 
 ## Local brokers for testing
 

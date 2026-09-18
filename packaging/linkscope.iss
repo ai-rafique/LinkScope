@@ -37,9 +37,17 @@ DisableProgramGroupPage=yes
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+#ifdef NpcapInstaller
+; Offered only when no Npcap is present on the machine. The Npcap installer shows its own wizard
+; and asks for elevation itself; it is not run silently.
+Name: "npcap"; Description: "Install Npcap {#NpcapVersion} (packet capture driver, used only by the Capture tool)"; GroupDescription: "Drivers:"; Check: not NpcapInstalled
+#endif
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+#ifdef NpcapInstaller
+Source: "{#NpcapInstaller}"; DestDir: "{tmp}"; DestName: "npcap-setup.exe"; Flags: deleteafterinstall; Tasks: npcap
+#endif
 
 [Icons]
 Name: "{group}\LinkScope"; Filename: "{app}\LinkScope.exe"
@@ -47,4 +55,15 @@ Name: "{group}\Uninstall LinkScope"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\LinkScope"; Filename: "{app}\LinkScope.exe"; Tasks: desktopicon
 
 [Run]
+#ifdef NpcapInstaller
+Filename: "{tmp}\npcap-setup.exe"; StatusMsg: "Installing Npcap (follow its wizard)..."; Tasks: npcap; Flags: waituntilterminated shellexec
+#endif
 Filename: "{app}\LinkScope.exe"; Description: "{cm:LaunchProgram,LinkScope}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+function NpcapInstalled: Boolean;
+begin
+  Result := FileExists(ExpandConstant('{sys}\Npcap\wpcap.dll'))
+    or RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Npcap')
+    or RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\WOW6432Node\Npcap');
+end;

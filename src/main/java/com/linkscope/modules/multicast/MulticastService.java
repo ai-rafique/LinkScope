@@ -131,9 +131,13 @@ public final class MulticastService extends AbstractService {
             if (running) {
                 String where = nif == null ? "default interface" : describe(nif);
                 logError(socket == null ? "Could not join " + group + ":" + port + " on " + where : "Receive error", e);
-                if (socket == null && e.getMessage() != null && e.getMessage().toLowerCase().contains("forbidden")) {
+                String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
+                if (socket == null && msg.contains("forbidden")) {
                     logError("Port " + port + " is likely inside a Windows reserved range; check with "
                             + "'netsh interface ipv4 show excludedportrange protocol=udp'");
+                } else if (socket == null && (msg.contains("setsockopt") || msg.contains("assign requested address"))) {
+                    logError(where + " has no usable IPv4 address (filter-driver shadows of real adapters look like this); "
+                            + "pick the adapter that shows an address");
                 }
                 setStatus(ModuleStatus.ERROR);
             }
