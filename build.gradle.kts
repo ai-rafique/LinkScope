@@ -51,7 +51,7 @@ dependencies {
     // Remote tools: SSH via the maintained JSch fork (pure Java; ed25519 and rsa-sha2 supported).
     implementation("com.github.mwiede:jsch:0.2.25")
 
-    // Packet capture (Capture tool): pcap4j over JNA; needs Npcap on Windows or libpcap on Linux at runtime.
+    // Packet capture (Capture tool): pcap4j over JNA; needs the Npcap driver at runtime.
     implementation("org.pcap4j:pcap4j-core:1.8.2")
     implementation("org.pcap4j:pcap4j-packetfactory-static:1.8.2")
 
@@ -207,33 +207,6 @@ tasks.register<Zip>("appImageZip") {
     destinationDirectory.set(installerDir)
 }
 
-// Linux portable build: a tarball keeps the launcher's executable bit, which a zip may not.
-// `./gradlew appImageTar` -> build/installer/LinkScope-<version>-linux-portable.tar.gz
-tasks.register<Tar>("appImageTar") {
-    group = "distribution"
-    description = "Tars the jpackage app image as a portable Linux build."
-    dependsOn("jpackageImage")
-    mustRunAfter("jpackage")
-    onlyIf { org.gradle.internal.os.OperatingSystem.current().isLinux }
-    from(appImageDir)
-    into("LinkScope")
-    compression = Compression.GZIP
-    archiveFileName.set("LinkScope-$distVersion-linux-portable.tar.gz")
-    destinationDirectory.set(installerDir)
-}
-
-// Copies the jpackage-built .deb next to the other distributables so CI uploads one folder.
-tasks.register<Copy>("linuxDeb") {
-    group = "distribution"
-    description = "Builds the .deb with jpackage and copies it to build/installer."
-    dependsOn("jpackage")
-    onlyIf { org.gradle.internal.os.OperatingSystem.current().isLinux }
-    from(layout.buildDirectory.dir("jpackage")) {
-        include("*.deb")
-    }
-    into(installerDir)
-}
-
 // badass-runtime: trimmed jlink image from the jdeps-suggested JDK module list,
 // then jpackage in classpath mode. No module-info.java anywhere: the app stays non-modular
 // because several dependencies only ship as automatic modules.
@@ -255,32 +228,13 @@ runtime {
         installerName = "LinkScope"
         // jpackage (and MSI) require a purely numeric version: strip any -SNAPSHOT/-rc suffix.
         val appVersion = project.version.toString().substringBefore("-")
-        // Branding: .ico on Windows, .png on Linux; macOS wants .icns (not generated yet, so it falls back to the default).
-        val os = org.gradle.internal.os.OperatingSystem.current()
-        val iconFile = when {
-            os.isWindows -> layout.projectDirectory.file("packaging/linkscope.ico")
-            os.isLinux -> layout.projectDirectory.file("packaging/linkscope.png")
-            else -> null
-        }
-        val iconOptions = if (iconFile != null && iconFile.asFile.exists()) listOf("--icon", iconFile.asFile.absolutePath) else emptyList()
+        // Windows is the only packaged platform. Branding comes from packaging/linkscope.ico.
+        val iconFile = layout.projectDirectory.file("packaging/linkscope.ico")
+        val iconOptions = if (iconFile.asFile.exists()) listOf("--icon", iconFile.asFile.absolutePath) else emptyList()
         imageOptions = listOf("--app-version", appVersion) + iconOptions
-        // Installer flags are platform-specific. Linux: a .deb via jpackage (needs dpkg-deb + fakeroot,
-        // both present on Debian/Ubuntu). Windows: jpackage's MSI needs WiX; the innoSetup task below
-        // is the supported route there instead.
-        val common = listOf("--app-version", appVersion, "--vendor", "LinkScope")
-        when {
-            os.isLinux -> {
-                installerType = "deb"
-                installerOptions = common + listOf(
-                    "--linux-package-name", "linkscope",
-                    "--linux-shortcut",
-                    "--linux-menu-group", "Development;Network",
-                    "--linux-app-category", "net",
-                    "--linux-deb-maintainer", "linkscope@localhost"
-                )
-            }
-            os.isWindows -> installerOptions = common + listOf("--win-menu", "--win-shortcut", "--win-dir-chooser")
-            else -> installerOptions = common
-        }
+        // jpackage's own MSI needs WiX; the innoSetup task above is the supported installer route.
+        // These options only matter if someone runs `jpackage` directly.
+        installerOptions = listOf("--app-version", appVersion, "--vendor", "LinkScope",
+                "--win-menu", "--win-shortcut", "--win-dir-chooser")
     }
 }

@@ -31,3 +31,4 @@ Thumbs.db
 # Third-party installers staged for bundling (fetched by gradle, never committed)
 packaging/npcap/
 branding/pcap.exe
+packaging/usbpcap/

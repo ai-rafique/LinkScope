@@ -7,7 +7,7 @@ development. It replaces the usual pile of `netcat`, `socat`, a serial terminal,
 broker CLIs and an SSH client with one window, one log format and one preset system that
 work the same way across every transport.
 
-Built with Java 21 and JavaFX. Runs on Windows and Linux with no separate Java install.
+Built with Java 21 and JavaFX. Packaged for Windows with no separate Java install.
 
 ## What it does
 
@@ -59,8 +59,7 @@ Tunnels and SFTP can reuse the SSH tab's login instead of connecting again.
   `ip.addr == 192.168.1.`, `port == 1883`, `len > 100`, `contains "hello"`, bare names
   like `udp`, `arp`, `mqtt`, and `and` / `or` / `not` with parentheses. Right-click a
   packet to filter its conversation or send its payload to the Decoder. Captures open and
-  save as `.pcap`, so they round-trip with Wireshark. Needs Npcap on Windows and libpcap on
-  Linux (see Install).
+  save as `.pcap`, so they round-trip with Wireshark. Needs the Npcap driver (see Install).
 - **Decoder** – paste bytes, describe the layout as field widths (`2 3 5 6 4`, with hints
   like `4f 2i 5s` and repeated groups `[2 4]*3`), and read every field as integers, floats
   and text in both byte orders. Any log line can be sent here.
@@ -91,24 +90,13 @@ Download from the Releases page or the CI artifacts:
 
 - **Windows**: `LinkScope-<version>-setup.exe` (installer, per-user by default) or
   `LinkScope-<version>-windows-portable.zip` (unzip and run `LinkScope.exe`).
-- **Linux**: `linkscope_<version>_amd64.deb` or `LinkScope-<version>-linux-portable.tar.gz`.
-  Serial ports need your user in the `dialout` group.
-
 Both bundle a trimmed Java runtime; nothing else is required.
 
-The Capture tool is the one exception: it needs the platform packet-capture driver.
-
-- **Windows**: the setup.exe bundles the [Npcap](https://npcap.com/) installer and offers
-  to run it when the machine has none (its own wizard appears; keep the defaults). The
-  portable zip does not include it; install Npcap yourself, or Wireshark, which ships it.
-- **Linux**: `sudo apt install libpcap0.8` (or your distribution's equivalent). Capturing
-  needs raw-socket rights, so either run LinkScope as root or grant the bundled runtime
-  the capability once:
-  `sudo setcap cap_net_raw,cap_net_admin=eip /opt/linkscope/lib/runtime/bin/java`
-  (adjust the path for a tarball install). Ports scanning benefits from the same grant.
-
-Every other module works without the driver; the Capture tab just reports that it is
-missing.
+The Capture tool is the one exception: it needs the [Npcap](https://npcap.com/) packet
+capture driver. The setup.exe bundles the Npcap installer and offers to run it when the
+machine has none (its own wizard appears; keep the defaults). The portable zip does not
+include it; install Npcap yourself, or Wireshark, which ships it. Every other module works
+without the driver; the Capture tab just reports that it is missing.
 
 ## Build from source
 
@@ -120,8 +108,6 @@ Requires JDK 21 (Eclipse Temurin recommended). Gradle comes with the wrapper.
 ./gradlew jpackageImage    # self-contained app image in build/jpackage/LinkScope
 ./gradlew innoSetup        # Windows setup.exe (needs Inno Setup 6)
 ./gradlew appImageZip      # Windows portable zip
-./gradlew linuxDeb         # Linux .deb (needs dpkg-deb and fakeroot)
-./gradlew appImageTar      # Linux portable tarball
 ```
 
 Outputs land in `build/installer/`. The version comes from `build.gradle.kts`. The
@@ -146,7 +132,7 @@ Host ports can be overridden through `dev/.env` (see `dev/.env.example`), useful
 
 `./gradlew build` runs the JUnit suite. Loopback tests (UDP, TCP, multicast, HTTP,
 WebSocket, Telnet, Modbus framing, Net Scan, Ports, packet dissection and display filters)
-run everywhere. The pcap round-trip and loopback capture tests skip without Npcap/libpcap.
+run everywhere. The pcap round-trip and loopback capture tests skip without Npcap.
 Broker tests run when
 the brokers are reachable and skip otherwise; set `SKIP_INTEGRATION=1` to skip them
 outright, as CI does. Hardware-dependent tests read their targets from environment
@@ -156,7 +142,7 @@ variables: `LINKSCOPE_SERIAL_PAIR=COM5,COM6` for a virtual serial pair and
 ## Dependencies
 
 JavaFX, AtlantaFX (theme), Ikonli (icons), jnats, kafka-clients, Eclipse Paho MQTT v5,
-jSerialComm, the maintained JSch fork, pcap4j (packet capture, over Npcap/libpcap),
+jSerialComm, the maintained JSch fork, pcap4j (packet capture, over Npcap),
 Jackson, dotenv-java, SLF4J API. HTTP and WebSocket use the JDK's built-in clients. Java-WebSocket is used only as a test echo server.
 
 ## License
