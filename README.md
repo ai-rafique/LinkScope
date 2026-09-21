@@ -116,6 +116,12 @@ the [USBPcap](https://github.com/desowin/usbpcap) driver, which the setup.exe al
 offers when missing; Windows must restart once after installing it. Every other module works
 without either driver; the Capture and USB tabs just report what is missing.
 
+## Contributing
+
+`docs/ARCHITECTURE.md` explains how the code is organised, the module contract, where
+shared state lives, how tests are gated, packaging, and the pitfalls already met. Read it
+before adding a module.
+
 ## Build from source
 
 Requires JDK 21 (Eclipse Temurin recommended). Gradle comes with the wrapper.
