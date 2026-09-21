@@ -177,7 +177,7 @@ public final class UsbPcapDissector {
                         info = summary;
                     }
                 } else if (fromDevice && endpoint == 0 && payload.length >= 2) {
-                    String summary = decodeDescriptors(payload, details);
+                    String summary = decodeDescriptors(payload, details, fields);
                     if (summary != null) {
                         info = summary;
                     }
@@ -302,7 +302,7 @@ public final class UsbPcapDissector {
     // --- descriptors --------------------------------------------------------------------
 
     /** Recognises device, configuration and string descriptors in IN data; returns the info summary or null. */
-    private static String decodeDescriptors(byte[] p, List<String> details) {
+    private static String decodeDescriptors(byte[] p, List<String> details, Map<String, String> fields) {
         int len = p[0] & 0xFF;
         int type = p[1] & 0xFF;
         if (len < 2 || len > p.length) {
@@ -320,6 +320,9 @@ public final class UsbPcapDissector {
                                 + "idVendor 0x%04X, idProduct 0x%04X, device %s, strings mfr %d / product %d / serial %d, %d configuration(s)",
                         bcd(le16(p, 2)), deviceClass, CLASSES.getOrDefault(deviceClass, ""), p[5] & 0xFF, p[6] & 0xFF, p[7] & 0xFF,
                         vid, pid, bcd(le16(p, 12)), p[14] & 0xFF, p[15] & 0xFF, p[16] & 0xFF, p[17] & 0xFF));
+                fields.put("usb.vid", String.format("%04x", vid));
+                fields.put("usb.pid", String.format("%04x", pid));
+                fields.put("usb.descriptor", "device");
                 return String.format("GET DESCRIPTOR Response DEVICE (%04x:%04x)", vid, pid);
             }
             case 2, 7 -> {

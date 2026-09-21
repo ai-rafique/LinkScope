@@ -44,7 +44,7 @@ public class UsbPcapDissectorTest {
     }
 
     /** FTDI FT232R device descriptor. */
-    static byte[] ftdiDeviceDescriptor() {
+    public static byte[] ftdiDeviceDescriptor() {
         return new byte[] {18, 1, 0x00, 0x02, 0, 0, 0, 8, 0x03, 0x04, 0x01, 0x60, 0x00, 0x06, 1, 2, 3, 1};
     }
 

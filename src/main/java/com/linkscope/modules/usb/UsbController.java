@@ -13,6 +13,7 @@ import com.linkscope.modules.capture.DisplayFilter;
 import com.linkscope.modules.capture.PacketRow;
 import com.linkscope.modules.usb.UsbCaptureService.Hub;
 import com.linkscope.modules.usb.UsbCaptureService.UsbDevice;
+import javafx.animation.PauseTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
@@ -29,15 +30,20 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -91,6 +97,41 @@ public class UsbController implements ModuleController {
     @FXML private TableColumn<PacketRow, String> lengthColumn;
     @FXML private TableColumn<PacketRow, String> infoColumn;
     @FXML private TextArea detailArea;
+    @FXML private ToggleButton recordsToggle;
+    @FXML private ToggleButton streamToggle;
+    @FXML private StackPane viewStack;
+    @FXML private SplitPane recordsPane;
+    @FXML private VBox streamPane;
+    @FXML private ComboBox<StreamDevice> streamDeviceCombo;
+    @FXML private ComboBox<String> streamEndpointCombo;
+    @FXML private CheckBox streamOutCheck;
+    @FXML private CheckBox streamInCheck;
+    @FXML private CheckBox ftdiCheck;
+    @FXML private TextField gapField;
+    @FXML private ComboBox<String> streamFormatCombo;
+    @FXML private ComboBox<String> streamDecodeCombo;
+    @FXML private TextArea streamArea;
+    @FXML private Label streamSummary;
+    @FXML private Button outDecoderButton;
+    @FXML private Button inDecoderButton;
+    @FXML private Button copyOutButton;
+    @FXML private Button copyInButton;
+
+    /** A device offered in the stream view: its bus.device address and a label with vendor:product and name. */
+    record StreamDevice(String addr, String label) {
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    private static final String ALL_ENDPOINTS = "All data endpoints";
+    private static final List<String> FORMATS = List.of("Hex + text", "Hex", "Text");
+    private static final List<String> DECODES = List.of("No decoding", "Modbus RTU");
+
+    private final PauseTransition streamRefresh = new PauseTransition(Duration.millis(250));
+    private List<UsbStream.Segment> currentSegments = List.of();
+    private String ftdiAutoFor;
 
     private final UsbCaptureService service = new UsbCaptureService();
     private final FilteredList<PacketRow> filtered = new FilteredList<>(service.rows());
@@ -180,6 +221,180 @@ public class UsbController implements ModuleController {
             service.clear();
             detailArea.clear();
         });
+        initStreamView();
+    }
+
+    // --- stream view ------------------------------------------------------------------------
+
+    private void initStreamView() {
+        ToggleGroup views = new ToggleGroup();
+        recordsToggle.setToggleGroup(views);
+        streamToggle.setToggleGroup(views);
+        views.selectedToggleProperty().addListener((obs, old, now) -> {
+            if (now == null) {
+                old.setSelected(true);
+                return;
+            }
+            boolean stream = now == streamToggle;
+            streamPane.setVisible(stream);
+            streamPane.setManaged(stream);
+            recordsPane.setVisible(!stream);
+            recordsPane.setManaged(!stream);
+            if (stream) {
+                refreshStreamDevices();
+                renderStream();
+            }
+        });
+        streamFormatCombo.getItems().setAll(FORMATS);
+        streamFormatCombo.getSelectionModel().selectFirst();
+        streamDecodeCombo.getItems().setAll(DECODES);
+        streamDecodeCombo.getSelectionModel().selectFirst();
+        streamEndpointCombo.getItems().setAll(ALL_ENDPOINTS);
+        streamEndpointCombo.getSelectionModel().selectFirst();
+
+        streamDeviceCombo.valueProperty().addListener((obs, old, now) -> {
+            refreshStreamEndpoints();
+            if (now != null && !now.addr().equals(ftdiAutoFor)) {
+                ftdiAutoFor = now.addr();
+                ftdiCheck.setSelected(UsbStream.looksLikeFtdi(service.rows(), now.addr()));
+            }
+            renderStream();
+        });
+        streamEndpointCombo.valueProperty().addListener((obs, old, now) -> renderStream());
+        streamFormatCombo.valueProperty().addListener((obs, old, now) -> renderStream());
+        streamDecodeCombo.valueProperty().addListener((obs, old, now) -> renderStream());
+        streamOutCheck.selectedProperty().addListener((obs, old, now) -> renderStream());
+        streamInCheck.selectedProperty().addListener((obs, old, now) -> renderStream());
+        ftdiCheck.selectedProperty().addListener((obs, old, now) -> renderStream());
+        gapField.textProperty().addListener((obs, old, now) -> renderStream());
+
+        streamRefresh.setOnFinished(e -> {
+            if (streamPane.isVisible()) {
+                refreshStreamDevices();
+                renderStream();
+            }
+        });
+        service.rows().addListener((ListChangeListener<PacketRow>) change -> {
+            if (streamPane.isVisible()) {
+                streamRefresh.playFromStart();
+            }
+        });
+
+        outDecoderButton.setOnAction(e -> toDecoder(UsbStream.Direction.OUT));
+        inDecoderButton.setOnAction(e -> toDecoder(UsbStream.Direction.IN));
+        copyOutButton.setOnAction(e -> copyStream(UsbStream.Direction.OUT));
+        copyInButton.setOnAction(e -> copyStream(UsbStream.Direction.IN));
+    }
+
+    private void refreshStreamDevices() {
+        List<PacketRow> rows = service.rows();
+        List<StreamDevice> items = new ArrayList<>();
+        for (String addr : UsbStream.devices(rows)) {
+            String vp = UsbStream.vendorProduct(rows, addr);
+            String name = deviceNameFor(addr);
+            String label = addr + (vp == null ? "" : "  " + vp) + (name == null ? "" : "  " + name);
+            items.add(new StreamDevice(addr, label));
+        }
+        StreamDevice keep = streamDeviceCombo.getValue();
+        boolean same = items.size() == streamDeviceCombo.getItems().size()
+                && items.stream().map(StreamDevice::label).toList().equals(streamDeviceCombo.getItems().stream().map(StreamDevice::label).toList());
+        if (same) {
+            return;
+        }
+        streamDeviceCombo.getItems().setAll(items);
+        StreamDevice pick = keep == null ? null : items.stream().filter(d -> d.addr().equals(keep.addr())).findFirst().orElse(null);
+        if (pick == null && !items.isEmpty()) {
+            pick = items.get(0);
+        }
+        streamDeviceCombo.setValue(pick);
+    }
+
+    /** The helper's device name for the device number in a bus.device address, if it is in the tick list. */
+    private String deviceNameFor(String addr) {
+        int dot = addr.indexOf('.');
+        String number = dot < 0 ? addr : addr.substring(dot + 1);
+        for (UsbDevice d : deviceList.getItems()) {
+            if (d.address().equals(number)) {
+                return d.display();
+            }
+        }
+        return null;
+    }
+
+    private void refreshStreamEndpoints() {
+        StreamDevice d = streamDeviceCombo.getValue();
+        String keep = streamEndpointCombo.getValue();
+        List<String> items = new ArrayList<>();
+        items.add(ALL_ENDPOINTS);
+        if (d != null) {
+            for (Integer ep : UsbStream.endpoints(service.rows(), d.addr())) {
+                items.add("Endpoint " + ep);
+            }
+        }
+        if (!items.equals(streamEndpointCombo.getItems())) {
+            streamEndpointCombo.getItems().setAll(items);
+            streamEndpointCombo.setValue(items.contains(keep) ? keep : ALL_ENDPOINTS);
+        }
+    }
+
+    private Integer selectedEndpoint() {
+        String v = streamEndpointCombo.getValue();
+        if (v == null || !v.startsWith("Endpoint ")) {
+            return null;
+        }
+        return Integer.parseInt(v.substring("Endpoint ".length()));
+    }
+
+    private UsbStream.Options streamOptions() {
+        long gap = 10;
+        try {
+            gap = Math.max(0, Long.parseLong(gapField.getText().trim()));
+        } catch (NumberFormatException ignored) {
+            // keep the default while the field is being edited
+        }
+        return new UsbStream.Options(ftdiCheck.isSelected(), 64, gap, streamInCheck.isSelected(), streamOutCheck.isSelected());
+    }
+
+    private void renderStream() {
+        StreamDevice d = streamDeviceCombo.getValue();
+        if (d == null) {
+            currentSegments = List.of();
+            streamArea.clear();
+            streamSummary.setText("");
+            return;
+        }
+        currentSegments = UsbStream.build(service.rows(), d.addr(), selectedEndpoint(), streamOptions());
+        int format = Math.max(0, streamFormatCombo.getSelectionModel().getSelectedIndex());
+        UsbStream.Format f = format == 1 ? UsbStream.Format.HEX : format == 2 ? UsbStream.Format.ASCII : UsbStream.Format.HEX_ASCII;
+        UsbStream.Decode decode = streamDecodeCombo.getSelectionModel().getSelectedIndex() == 1 ? UsbStream.Decode.MODBUS_RTU : UsbStream.Decode.NONE;
+        String text = UsbStream.render(currentSegments, f, decode, 2000);
+        if (!text.equals(streamArea.getText())) {
+            streamArea.setText(text);
+            if (followToggle.isSelected()) {
+                streamArea.positionCaret(text.length());
+                streamArea.setScrollTop(Double.MAX_VALUE);
+            }
+        }
+        streamSummary.setText(UsbStream.summary(currentSegments));
+    }
+
+    private void toDecoder(UsbStream.Direction direction) {
+        byte[] data = UsbStream.concat(currentSegments, direction);
+        if (data.length == 0) {
+            Toasts.info("No " + direction + " data in the current stream");
+            return;
+        }
+        DecoderBridge.open(data);
+    }
+
+    private void copyStream(UsbStream.Direction direction) {
+        byte[] data = UsbStream.concat(currentSegments, direction);
+        if (data.length == 0) {
+            Toasts.info("No " + direction + " data in the current stream");
+            return;
+        }
+        copy(PayloadCodec.toHex(data));
+        Toasts.success("Copied " + data.length + " " + direction + " byte(s) as hex");
     }
 
     private BooleanProperty tickOf(UsbDevice d) {

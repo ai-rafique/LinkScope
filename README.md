@@ -39,7 +39,11 @@ setup as a named preset, and shows its state with an icon and a word, never colo
   and what comes back. Same table, decoding and `usb.*` filters as USB files in Capture;
   records save as `.pcap` for Wireshark. Needs administrator rights: Windows asks when the
   capture starts unless LinkScope already runs elevated. A warning appears when the ticked
-  devices include a keyboard, since that capture would contain keystrokes.
+  devices include a keyboard, since that capture would contain keystrokes. The **Stream**
+  view turns one device's bulk and interrupt transfers into the two byte streams a serial
+  terminal would show, OUT and IN, merging back-to-back transfers, optionally stripping
+  FTDI status bytes (detected from the device descriptor), rendered as hex and text or
+  decoded as Modbus RTU, with either direction sendable to the Decoder or the clipboard.
 
 **Web**
 - **HTTP** – GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS, headers, raw/JSON/form bodies, Basic
