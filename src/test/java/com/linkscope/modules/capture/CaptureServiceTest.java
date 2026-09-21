@@ -96,6 +96,56 @@ class CaptureServiceTest {
         assertEquals(3, service.capturedProperty().get());
     }
 
+    /** Minimal classic pcap writer (little-endian, microsecond timestamps) for files with arbitrary link types. */
+    static void writePcap(Path file, int linkType, List<byte[]> records) throws Exception {
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        java.nio.ByteBuffer header = java.nio.ByteBuffer.allocate(24).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        header.putInt(0xa1b2c3d4).putShort((short) 2).putShort((short) 4).putInt(0).putInt(0).putInt(65535).putInt(linkType);
+        out.write(header.array());
+        int sec = 1_700_000_000;
+        for (byte[] r : records) {
+            java.nio.ByteBuffer rec = java.nio.ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            rec.putInt(sec++).putInt(0).putInt(r.length).putInt(r.length);
+            out.write(rec.array());
+            out.write(r);
+        }
+        Files.write(file, out.toByteArray());
+    }
+
+    @Test
+    void opensAndResavesUsbPcapFiles(@TempDir Path dir) throws Exception {
+        Assumptions.assumeTrue(driverAvailable(), "capture driver not installed");
+        LogSink.get().clear();
+        byte[] bulk = UsbPcapDissectorTest.record(1, 5, 0x81, UsbPcapDissector.TRANSFER_BULK, 0x0009, true, 0, new byte[0],
+                "hello".getBytes());
+        byte[] setup = UsbPcapDissectorTest.record(1, 5, 0x80, UsbPcapDissector.TRANSFER_CONTROL, 0x000B, false, 0, new byte[] {0},
+                UsbPcapDissectorTest.setup(0x80, 6, 0x0100, 0, 18));
+        Path file = dir.resolve("usb.pcap");
+        writePcap(file, UsbPcapDissector.DLT_USBPCAP, List.of(bulk, setup));
+
+        CaptureService service = new CaptureService();
+        service.openFile(file);
+        awaitTrue("usb file opened", Duration.ofSeconds(10), () -> TestSupport.snapshot(service.rows()).size() == 2);
+        List<PacketRow> rows = TestSupport.snapshot(service.rows());
+        assertEquals("USB", rows.get(0).protocol());
+        assertEquals("1.5.1", rows.get(0).src());
+        assertEquals("host", rows.get(0).dst());
+        assertEquals("URB_BULK in Len=5", rows.get(0).info());
+        assertEquals("GET DESCRIPTOR Request DEVICE Len=8", rows.get(1).info());
+        assertEquals(1.0, rows.get(1).relativeSeconds(), 0.001);
+
+        Path copy = dir.resolve("usb-copy.pcap");
+        AtomicBoolean saved = new AtomicBoolean();
+        service.saveFile(copy, rows, () -> saved.set(true));
+        awaitTrue("usb file saved", Duration.ofSeconds(10), saved::get);
+        service.clear();
+        service.openFile(copy);
+        awaitTrue("usb copy reopened", Duration.ofSeconds(10), () -> TestSupport.snapshot(service.rows()).size() == 2);
+        List<PacketRow> again = TestSupport.snapshot(service.rows());
+        assertEquals("1.5.1", again.get(0).src(), "link type 249 survives the save");
+        assertEquals("bulk", again.get(0).field("usb.type"));
+    }
+
     @Test
     void liveCaptureOnLoopbackIfAvailable() {
         Assumptions.assumeTrue(driverAvailable(), "capture driver not installed");

@@ -60,6 +60,11 @@ Tunnels and SFTP can reuse the SSH tab's login instead of connecting again.
   like `udp`, `arp`, `mqtt`, and `and` / `or` / `not` with parentheses. Right-click a
   packet to filter its conversation or send its payload to the Decoder. Captures open and
   save as `.pcap`, so they round-trip with Wireshark. Needs the Npcap driver (see Install).
+  USB captures made with Wireshark's USBPcap interface open too: rows are addressed as
+  `bus.device.endpoint`, the protocol column shows the transfer type, control setup packets
+  and device, configuration and string descriptors are decoded, and vendor requests carry
+  FTDI/CP210x hints. Filter with `usb.addr == 1.5`, `usb.endpoint == 1`, `usb.dir == in`,
+  `usb.type == bulk` or bare words such as `bulk`, `control`, `interrupt`.
 - **Decoder** – paste bytes, describe the layout as field widths (`2 3 5 6 4`, with hints
   like `4f 2i 5s` and repeated groups `[2 4]*3`), and read every field as integers, floats
   and text in both byte orders. Any log line can be sent here.

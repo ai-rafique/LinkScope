@@ -244,7 +244,7 @@ public final class CaptureService extends AbstractService {
                     }
                     double rel = (time.toEpochMilli() - firstTime.toEpochMilli()) / 1000.0
                             + (time.getNano() % 1_000_000) / 1_000_000_000.0;
-                    PacketRow row = PacketDissector.dissect(packet, ++counter, time, rel);
+                    PacketRow row = PacketDissector.dissect(packet, linkType, ++counter, time, rel);
                     totalBytes += row.length();
                     pending.add(row);
                 } catch (TimeoutException ignored) {
@@ -354,7 +354,7 @@ public final class CaptureService extends AbstractService {
                         first = time;
                     }
                     double rel = (time.toEpochMilli() - first.toEpochMilli()) / 1000.0;
-                    PacketRow row = PacketDissector.dissect(packet, ++n, time, rel);
+                    PacketRow row = PacketDissector.dissect(packet, linkType, ++n, time, rel);
                     total += row.length();
                     loaded.add(row);
                     if (loaded.size() > rowCap) {

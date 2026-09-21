@@ -13,6 +13,7 @@ import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.TcpPacket;
 import org.pcap4j.packet.UdpPacket;
 import org.pcap4j.packet.namednumber.ArpOperation;
+import org.pcap4j.packet.namednumber.DataLinkType;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -33,6 +34,14 @@ public final class PacketDissector {
             Map.entry(8080, "HTTP"), Map.entry(8443, "HTTPS"), Map.entry(8883, "MQTT/TLS"), Map.entry(9092, "Kafka"));
 
     private PacketDissector() {
+    }
+
+    /** Dispatches on the capture's link type: USBPcap records have their own layout, everything else is Ethernet. */
+    public static PacketRow dissect(Packet packet, DataLinkType linkType, long number, Instant time, double relativeSeconds) {
+        if (linkType != null && linkType.value() == UsbPcapDissector.DLT_USBPCAP) {
+            return UsbPcapDissector.dissect(packet.getRawData(), number, time, relativeSeconds);
+        }
+        return dissect(packet, number, time, relativeSeconds);
     }
 
     public static PacketRow dissect(Packet packet, long number, Instant time, double relativeSeconds) {

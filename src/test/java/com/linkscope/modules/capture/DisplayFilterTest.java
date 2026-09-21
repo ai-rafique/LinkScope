@@ -20,6 +20,10 @@ class DisplayFilterTest {
     private static final PacketRow MQTT = row("192.168.1.5", "192.168.1.10", 51000, 1883, "TCP", "MQTT", 120, "51000 → 1883 [PSH,ACK]", "MQTT hello");
     private static final PacketRow MODBUS_UDP = row("10.0.0.7", "239.192.10.4", 40000, 16004, "UDP", "", 64, "40000 → 16004 Len=22", "");
     private static final PacketRow ARP = row("192.168.1.1", "192.168.1.5", null, null, "ARP", "", 42, "Who has 192.168.1.5? Tell 192.168.1.1", null);
+    private static final PacketRow USB_BULK = new PacketRow(9, Instant.EPOCH, 0, "1.5.1", "host", null, null, "USB", "USB Bulk", 91,
+            "URB_BULK in Len=64", new byte[91], "serial bytes".getBytes(StandardCharsets.UTF_8), "",
+            java.util.Map.of("usb.bus", "1", "usb.device", "5", "usb.addr", "1.5", "usb.endpoint", "1", "usb.dir", "in",
+                    "usb.type", "bulk", "usb.status", "success"));
 
     private static boolean m(String filter, PacketRow r) {
         Predicate<PacketRow> p = DisplayFilter.compile(filter);
@@ -81,6 +85,27 @@ class DisplayFilterTest {
         assertTrue(m("contains 0x0103", MODBUS_UDP), "hex needle against payload bytes");
         assertTrue(m("info contains \"Who has\"", ARP));
         assertTrue(m("payload contains hello", MQTT));
+    }
+
+    @Test
+    void usbFieldsAndBareWords() {
+        assertTrue(m("usb", USB_BULK));
+        assertFalse(m("usb", MQTT));
+        assertTrue(m("bulk", USB_BULK));
+        assertFalse(m("control", USB_BULK));
+        assertFalse(m("ip", USB_BULK), "bus.device.endpoint is not an IPv4 address");
+        assertFalse(m("tcp", USB_BULK));
+        assertTrue(m("usb.addr == 1.5", USB_BULK));
+        assertTrue(m("usb.addr == 1.", USB_BULK), "prefix match selects a whole bus");
+        assertFalse(m("usb.addr == 1.6", USB_BULK));
+        assertTrue(m("usb.endpoint == 1", USB_BULK));
+        assertTrue(m("usb.endpoint > 0 and usb.dir == in", USB_BULK));
+        assertFalse(m("usb.dir == out", USB_BULK));
+        assertTrue(m("usb.type == bulk and contains serial", USB_BULK));
+        assertTrue(m("usb.status != stall_pid", USB_BULK));
+        assertFalse(m("usb.addr == 1.5", MQTT), "network rows have no USB fields");
+        assertFalse(m("usb.endpoint == 1", MQTT));
+        assertThrows(IllegalArgumentException.class, () -> DisplayFilter.compile("bogus.addr == 1.5"));
     }
 
     @Test

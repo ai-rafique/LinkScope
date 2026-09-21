@@ -167,21 +167,46 @@ public final class DisplayFilter {
         return v.startsWith("\"") ? v.substring(1) : v;
     }
 
-    /** {@code tcp}, {@code arp}, {@code mqtt} ... match the protocol or app column, case-insensitively. */
+    /**
+     * {@code tcp}, {@code arp}, {@code mqtt} ... match the protocol or app column, case-insensitively;
+     * {@code bulk}, {@code control}, {@code in}, {@code out} ... match any extra field value (USB rows).
+     */
     private static Predicate<PacketRow> bareWord(String word) {
         String w = word.equals("ip") ? "ipv4" : word;
         return row -> {
             String proto = row.protocol().toLowerCase(Locale.ROOT);
             String app = row.app().toLowerCase(Locale.ROOT);
             if (w.equals("ipv4")) {
-                return row.src().contains(".") && !proto.equals("arp");
+                return row.src().contains(".") && !proto.equals("arp") && !proto.equals("usb");
             }
             if (w.equals("ipv6")) {
-                return row.src().contains(":");
+                return row.src().contains(":") && !proto.equals("usb");
             }
             return proto.equals(w) || app.equals(w) || app.replace("/", "").equals(w)
-                    || (w.equals("icmp") && proto.startsWith("icmp"));
+                    || (w.equals("icmp") && proto.startsWith("icmp"))
+                    || row.fields().containsValue(w);
         };
+    }
+
+    /** Extra-field comparison ({@code usb.*}): numeric when the operator or value calls for it, text otherwise. */
+    private static Predicate<PacketRow> fieldCompare(String field, String op, String value) {
+        boolean numericOp = op.equals("<") || op.equals(">") || op.equals("<=") || op.equals(">=");
+        boolean numericValue = value.chars().allMatch(Character::isDigit) && !value.isEmpty();
+        if (numericOp || numericValue) {
+            int n = intValue(value, field);
+            return numberCompare(op, n, row -> {
+                String s = row.field(field);
+                if (s == null) {
+                    return null;
+                }
+                try {
+                    return Integer.parseInt(s);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            });
+        }
+        return textCompare(op, value, row -> row.field(field));
     }
 
     private static Predicate<PacketRow> containsAnywhere(String value) {
@@ -233,8 +258,13 @@ public final class DisplayFilter {
             case "payload", "data" -> {
                 return textCompare(op, value, PacketDissector::payloadText);
             }
-            default -> throw new IllegalArgumentException("Unknown field \"" + field
-                    + "\" (try ip.addr, ip.src, ip.dst, port, srcport, dstport, len, proto, app, info)");
+            default -> {
+                if (field.startsWith("usb.")) {
+                    return fieldCompare(field, op, value);
+                }
+                throw new IllegalArgumentException("Unknown field \"" + field
+                        + "\" (try ip.addr, ip.src, ip.dst, port, srcport, dstport, len, proto, app, info, usb.addr, usb.endpoint, usb.dir, usb.type)");
+            }
         }
     }
 

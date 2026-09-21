@@ -265,9 +265,14 @@ public class CaptureController implements ModuleController {
             if (r == null) {
                 return;
             }
-            String f = "ip.addr == " + r.src() + " and ip.addr == " + r.dst();
-            if (r.srcPort() != null && r.dstPort() != null) {
-                f += " and port == " + r.srcPort() + " and port == " + r.dstPort();
+            String f;
+            if ("USB".equals(r.protocol())) {
+                f = "usb.addr == " + r.field("usb.addr") + " and usb.endpoint == " + r.field("usb.endpoint");
+            } else {
+                f = "ip.addr == " + r.src() + " and ip.addr == " + r.dst();
+                if (r.srcPort() != null && r.dstPort() != null) {
+                    f += " and port == " + r.srcPort() + " and port == " + r.dstPort();
+                }
             }
             displayFilterField.setText(f);
         });
@@ -275,7 +280,7 @@ public class CaptureController implements ModuleController {
         host.setOnAction(e -> {
             PacketRow r = table.getSelectionModel().getSelectedItem();
             if (r != null) {
-                displayFilterField.setText("ip.addr == " + r.src());
+                displayFilterField.setText("USB".equals(r.protocol()) ? "usb.addr == " + r.field("usb.addr") : "ip.addr == " + r.src());
             }
         });
         MenuItem clearFilter = new MenuItem("Clear display filter");
