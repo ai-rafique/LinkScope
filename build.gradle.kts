@@ -162,16 +162,52 @@ tasks.register("fetchNpcap") {
     }
 }
 
+// USBPcap installer (GPL-2, from https://github.com/desowin/usbpcap) bundled the same way and offered
+// when the machine has no USBPcap; it needs a restart before the USB tool can capture.
+val usbpcapVersion = "1.5.4.0"
+val usbpcapFileName = "USBPcapSetup-$usbpcapVersion.exe"
+val usbpcapLocal = layout.projectDirectory.file("packaging/usbpcap/$usbpcapFileName")
+val usbpcapCached = layout.buildDirectory.file("usbpcap/$usbpcapFileName")
+
+tasks.register("fetchUsbPcap") {
+    group = "distribution"
+    description = "Fetches the USBPcap installer for bundling into the Windows setup (skipped if packaging/usbpcap/ has it)."
+    onlyIf { org.gradle.internal.os.OperatingSystem.current().isWindows }
+    outputs.file(usbpcapCached)
+    doLast {
+        val target = usbpcapCached.get().asFile
+        if (usbpcapLocal.asFile.isFile) {
+            usbpcapLocal.asFile.copyTo(target, overwrite = true)
+            return@doLast
+        }
+        if (target.isFile && target.length() > 500_000) {
+            return@doLast
+        }
+        target.parentFile.mkdirs()
+        val url = URI("https://github.com/desowin/usbpcap/releases/download/$usbpcapVersion/$usbpcapFileName").toURL()
+        logger.lifecycle("Downloading $url")
+        val conn = url.openConnection() as HttpURLConnection
+        conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+        conn.instanceFollowRedirects = true
+        conn.inputStream.use { input -> target.outputStream().use { input.copyTo(it) } }
+        if (target.length() < 500_000) {
+            target.delete()
+            throw GradleException("USBPcap download looks wrong (too small). Place $usbpcapFileName under packaging/usbpcap/ manually.")
+        }
+    }
+}
+
 tasks.register<Exec>("innoSetup") {
     group = "distribution"
     description = "Builds a Windows setup.exe from the jpackage app image with Inno Setup."
-    dependsOn("jpackageImage", "fetchNpcap")
+    dependsOn("jpackageImage", "fetchNpcap", "fetchUsbPcap")
     mustRunAfter("jpackage")
     onlyIf { org.gradle.internal.os.OperatingSystem.current().isWindows }
     inputs.dir(appImageDir)
     inputs.file(layout.projectDirectory.file("packaging/linkscope.iss"))
     inputs.file(layout.projectDirectory.file("packaging/linkscope.ico"))
     inputs.file(npcapCached)
+    inputs.file(usbpcapCached)
     outputs.file(installerDir.map { it.file("LinkScope-$distVersion-setup.exe") })
     val iscc = findIscc()
     executable = iscc?.absolutePath ?: "ISCC.exe"
@@ -182,6 +218,8 @@ tasks.register<Exec>("innoSetup") {
         "/DOutputDir=${installerDir.get().asFile.absolutePath}",
         "/DNpcapInstaller=${npcapCached.get().asFile.absolutePath}",
         "/DNpcapVersion=$npcapVersion",
+        "/DUsbPcapInstaller=${usbpcapCached.get().asFile.absolutePath}",
+        "/DUsbPcapVersion=$usbpcapVersion",
         layout.projectDirectory.file("packaging/linkscope.iss").asFile.absolutePath
     )
     doFirst {

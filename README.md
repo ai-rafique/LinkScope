@@ -33,6 +33,13 @@ setup as a named preset, and shows its state with an icon and a word, never colo
 - **Modbus** – RTU over serial or Modbus TCP: frames split on the inter-frame gap, verified
   with a configurable CRC (presets, custom parameters, or a pasted lookup table from a
   vendor manual), decoded per function code; request builder with polling.
+- **USB** – live USB capture through USBPcap: pick a root hub, tick the devices to watch,
+  and every transfer between Windows and those devices appears as it happens, below the
+  device driver, so it shows what any program sends to a USB-serial adapter or HID device
+  and what comes back. Same table, decoding and `usb.*` filters as USB files in Capture;
+  records save as `.pcap` for Wireshark. Needs administrator rights: Windows asks when the
+  capture starts unless LinkScope already runs elevated. A warning appears when the ticked
+  devices include a keyboard, since that capture would contain keystrokes.
 
 **Web**
 - **HTTP** – GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS, headers, raw/JSON/form bodies, Basic
@@ -100,8 +107,10 @@ Both bundle a trimmed Java runtime; nothing else is required.
 The Capture tool is the one exception: it needs the [Npcap](https://npcap.com/) packet
 capture driver. The setup.exe bundles the Npcap installer and offers to run it when the
 machine has none (its own wizard appears; keep the defaults). The portable zip does not
-include it; install Npcap yourself, or Wireshark, which ships it. Every other module works
-without the driver; the Capture tab just reports that it is missing.
+include it; install Npcap yourself, or Wireshark, which ships it. The USB tool likewise needs
+the [USBPcap](https://github.com/desowin/usbpcap) driver, which the setup.exe also bundles and
+offers when missing; Windows must restart once after installing it. Every other module works
+without either driver; the Capture and USB tabs just report what is missing.
 
 ## Build from source
 
@@ -116,8 +125,9 @@ Requires JDK 21 (Eclipse Temurin recommended). Gradle comes with the wrapper.
 ```
 
 Outputs land in `build/installer/`. The version comes from `build.gradle.kts`. The
-`innoSetup` task fetches the Npcap installer from npcap.com once into `build/npcap/`;
-to build offline, put `npcap-<version>.exe` under `packaging/npcap/` instead.
+`innoSetup` task fetches the Npcap and USBPcap installers once into `build/npcap/` and
+`build/usbpcap/`; to build offline, put them under `packaging/npcap/` and `packaging/usbpcap/`
+instead.
 
 ## Local brokers for testing
 
@@ -137,7 +147,9 @@ Host ports can be overridden through `dev/.env` (see `dev/.env.example`), useful
 
 `./gradlew build` runs the JUnit suite. Loopback tests (UDP, TCP, multicast, HTTP,
 WebSocket, Telnet, Modbus framing, Net Scan, Ports, packet dissection and display filters)
-run everywhere. The pcap round-trip and loopback capture tests skip without Npcap.
+run everywhere, as do the pcap file reader/writer and USBPcap dissector tests. The pcap
+round-trip and loopback capture tests skip without Npcap; the live USB capture test skips
+unless USBPcap is installed and the test process runs elevated.
 Broker tests run when
 the brokers are reachable and skip otherwise; set `SKIP_INTEGRATION=1` to skip them
 outright, as CI does. Hardware-dependent tests read their targets from environment

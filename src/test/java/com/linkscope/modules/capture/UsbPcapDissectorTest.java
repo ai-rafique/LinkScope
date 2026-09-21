@@ -15,10 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** USBPcap records built by hand; no driver involved. */
-class UsbPcapDissectorTest {
+public class UsbPcapDissectorTest {
 
     /** Builds one USBPcap record: 27-byte header, optional transfer-specific header bytes, then data. */
-    static byte[] record(int bus, int device, int endpoint, int transfer, int function, boolean fromDevice, int status,
+    public static byte[] record(int bus, int device, int endpoint, int transfer, int function, boolean fromDevice, int status,
                          byte[] extraHeader, byte[] data) {
         int headerLen = UsbPcapDissector.HEADER_MIN + extraHeader.length;
         ByteBuffer b = ByteBuffer.allocate(headerLen + data.length).order(ByteOrder.LITTLE_ENDIAN);
@@ -37,7 +37,7 @@ class UsbPcapDissectorTest {
         return b.array();
     }
 
-    static byte[] setup(int bmRequestType, int bRequest, int wValue, int wIndex, int wLength) {
+    public static byte[] setup(int bmRequestType, int bRequest, int wValue, int wIndex, int wLength) {
         ByteBuffer b = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
         b.put((byte) bmRequestType).put((byte) bRequest).putShort((short) wValue).putShort((short) wIndex).putShort((short) wLength);
         return b.array();

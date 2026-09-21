@@ -178,6 +178,10 @@
     -fx-text-fill: -color-danger-fg;
 }
 
+.ls-warning-text {
+    -fx-text-fill: -color-warning-fg;
+}
+
 .ls-console,
 .ls-console .content {
     -fx-background-color: -color-bg-inset;

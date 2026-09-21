@@ -24,11 +24,11 @@ public final class UsbPcapDissector {
     public static final int DLT_USBPCAP = 249;
     static final int HEADER_MIN = 27;
 
-    static final int TRANSFER_ISOCH = 0;
-    static final int TRANSFER_INTERRUPT = 1;
-    static final int TRANSFER_CONTROL = 2;
-    static final int TRANSFER_BULK = 3;
-    static final int TRANSFER_IRP_INFO = 0xFE;
+    public static final int TRANSFER_ISOCH = 0;
+    public static final int TRANSFER_INTERRUPT = 1;
+    public static final int TRANSFER_CONTROL = 2;
+    public static final int TRANSFER_BULK = 3;
+    public static final int TRANSFER_IRP_INFO = 0xFE;
 
     private static final Map<Integer, String> FUNCTIONS = Map.ofEntries(
             Map.entry(0x0000, "SELECT_CONFIGURATION"), Map.entry(0x0001, "SELECT_INTERFACE"), Map.entry(0x0002, "ABORT_PIPE"),

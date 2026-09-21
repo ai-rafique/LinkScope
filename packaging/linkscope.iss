@@ -42,11 +42,17 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; and asks for elevation itself; it is not run silently.
 Name: "npcap"; Description: "Install Npcap {#NpcapVersion} (packet capture driver, used only by the Capture tool)"; GroupDescription: "Drivers:"; Check: not NpcapInstalled
 #endif
+#ifdef UsbPcapInstaller
+Name: "usbpcap"; Description: "Install USBPcap {#UsbPcapVersion} (USB capture driver, used only by the USB tool; Windows must restart before it works)"; GroupDescription: "Drivers:"; Check: not UsbPcapInstalled
+#endif
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 #ifdef NpcapInstaller
 Source: "{#NpcapInstaller}"; DestDir: "{tmp}"; DestName: "npcap-setup.exe"; Flags: deleteafterinstall; Tasks: npcap
+#endif
+#ifdef UsbPcapInstaller
+Source: "{#UsbPcapInstaller}"; DestDir: "{tmp}"; DestName: "usbpcap-setup.exe"; Flags: deleteafterinstall; Tasks: usbpcap
 #endif
 
 [Icons]
@@ -58,6 +64,9 @@ Name: "{autodesktop}\LinkScope"; Filename: "{app}\LinkScope.exe"; Tasks: desktop
 #ifdef NpcapInstaller
 Filename: "{tmp}\npcap-setup.exe"; StatusMsg: "Installing Npcap (follow its wizard)..."; Tasks: npcap; Flags: waituntilterminated shellexec
 #endif
+#ifdef UsbPcapInstaller
+Filename: "{tmp}\usbpcap-setup.exe"; StatusMsg: "Installing USBPcap (follow its wizard; a restart is needed afterwards)..."; Tasks: usbpcap; Flags: waituntilterminated shellexec
+#endif
 Filename: "{app}\LinkScope.exe"; Description: "{cm:LaunchProgram,LinkScope}"; Flags: nowait postinstall skipifsilent
 
 [Code]
@@ -66,4 +75,10 @@ begin
   Result := FileExists(ExpandConstant('{sys}\Npcap\wpcap.dll'))
     or RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Npcap')
     or RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\WOW6432Node\Npcap');
+end;
+
+function UsbPcapInstalled: Boolean;
+begin
+  Result := FileExists(ExpandConstant('{commonpf64}\USBPcap\USBPcapCMD.exe'))
+    or RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\USBPcap');
 end;
