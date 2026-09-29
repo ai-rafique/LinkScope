@@ -43,11 +43,20 @@ public final class UsbCaptureService extends AbstractService {
     private static final Pattern INTERFACE = Pattern.compile("interface \\{value=([^}]*)\\}\\{display=([^}]*)\\}");
     private static final Pattern VALUE = Pattern.compile("value \\{arg=99\\}\\{value=([^}]*)\\}\\{display=([^}]*)\\}(?:\\{enabled=([^}]*)\\})?(?:\\{parent=([^}]*)\\})?");
 
-    /** A USBPcap root hub, e.g. {@code \\.\USBPcap1}. */
-    public record Hub(String name, String display) {
+    /** A USBPcap root hub, e.g. {@code \\.\USBPcap1}; {@code deviceCount} is -1 until the devices have been listed. */
+    public record Hub(String name, String display, int deviceCount) {
+        public Hub(String name, String display) {
+            this(name, display, -1);
+        }
+
+        public Hub withCount(int count) {
+            return new Hub(name, display, count);
+        }
+
         @Override
         public String toString() {
-            return display + "  (" + name + ")";
+            String count = deviceCount < 0 ? "" : deviceCount == 0 ? "  ·  no devices" : "  ·  " + deviceCount + " device(s)";
+            return display + "  (" + name + ")" + count;
         }
     }
 
@@ -178,6 +187,24 @@ public final class UsbCaptureService extends AbstractService {
         return parseInterfaces(run(h, List.of("--extcap-interfaces"), 15));
     }
 
+    /**
+     * Root hubs with their device counts, so the UI can lead with the populated one. The
+     * numbering of the hubs is not stable across reboots. Blocking; call off the FX thread.
+     */
+    public static List<Hub> hubsWithCounts() throws IOException {
+        List<Hub> out = new ArrayList<>();
+        for (Hub h : hubs()) {
+            int count;
+            try {
+                count = devices(h.name()).size();
+            } catch (IOException e) {
+                count = -1;
+            }
+            out.add(h.withCount(count));
+        }
+        return out;
+    }
+
     /** Devices behind a hub. Blocking; call off the FX thread. */
     public static List<UsbDevice> devices(String hub) throws IOException {
         Path h = helper();
@@ -196,7 +223,12 @@ public final class UsbCaptureService extends AbstractService {
         return out;
     }
 
-    /** Top-level entries (numeric addresses) become devices; entries with a parent are folded into their root's children. */
+    /**
+     * Entries with a purely numeric value are devices (the number is the address the helper's
+     * {@code --devices} option takes), whether they sit directly on the root hub or behind an
+     * external hub. Entries like {@code 6_1} are interfaces or child functions and are folded
+     * into the nearest device above them.
+     */
     static List<UsbDevice> parseDevices(String output) {
         Map<String, String> displays = new LinkedHashMap<>();
         Map<String, String> parents = new LinkedHashMap<>();
@@ -209,25 +241,37 @@ public final class UsbCaptureService extends AbstractService {
         }
         Map<String, List<String>> children = new LinkedHashMap<>();
         for (String id : displays.keySet()) {
-            if (!parents.containsKey(id)) {
+            if (isAddress(id)) {
                 children.put(id, new ArrayList<>());
             }
         }
         for (Map.Entry<String, String> e : parents.entrySet()) {
-            String root = e.getValue();
-            while (parents.containsKey(root)) {
-                root = parents.get(root);
+            if (isAddress(e.getKey())) {
+                continue; // a device behind a hub stays its own entry
             }
-            List<String> list = children.get(root);
+            String owner = e.getValue();
+            while (!isAddress(owner) && parents.containsKey(owner)) {
+                owner = parents.get(owner);
+            }
+            List<String> list = children.get(owner);
             if (list != null) {
                 list.add(displays.get(e.getKey()));
             }
         }
         List<UsbDevice> out = new ArrayList<>();
         for (Map.Entry<String, List<String>> e : children.entrySet()) {
-            out.add(new UsbDevice(e.getKey(), stripAddress(displays.get(e.getKey())), List.copyOf(e.getValue())));
+            String display = stripAddress(displays.get(e.getKey()));
+            String hub = parents.get(e.getKey());
+            if (hub != null) {
+                display += " (behind hub " + hub + ")";
+            }
+            out.add(new UsbDevice(e.getKey(), display, List.copyOf(e.getValue())));
         }
         return out;
+    }
+
+    private static boolean isAddress(String value) {
+        return !value.isEmpty() && value.chars().allMatch(Character::isDigit);
     }
 
     private static String stripAddress(String display) {

@@ -48,7 +48,29 @@ class UsbCaptureServiceTest {
             value {arg=99}{value=1_1}{display=HP Wide Vision HD Camera}{enabled=false}{parent=1}
             value {arg=99}{value=2}{display=[2] Intel(R) Wireless Bluetooth(R)}{enabled=true}
             value {arg=99}{value=7}{display=[7] USB Serial Converter}{enabled=true}
+            value {arg=99}{value=9}{display=[9] Generic USB Hub}{enabled=true}
+            value {arg=99}{value=12}{display=[12] USB Serial Port}{enabled=true}{parent=9}
+            value {arg=99}{value=12_1}{display=USB Serial Port (COM7)}{enabled=false}{parent=12}
             """;
+
+    @Test
+    void hubLabelsCarryDeviceCounts() {
+        Hub h = new Hub("\\\\.\\USBPcap2", "USBPcap2");
+        assertEquals(-1, h.deviceCount());
+        assertEquals("USBPcap2  (\\\\.\\USBPcap2)", h.toString());
+        assertEquals("USBPcap2  (\\\\.\\USBPcap2)  ·  5 device(s)", h.withCount(5).toString());
+        assertEquals("USBPcap2  (\\\\.\\USBPcap2)  ·  no devices", h.withCount(0).toString());
+    }
+
+    @Test
+    void devicesBehindAnExternalHubStayTickable() {
+        List<UsbDevice> devices = UsbCaptureService.parseDevices(CONFIG);
+        UsbDevice behind = devices.stream().filter(d -> d.address().equals("12")).findFirst().orElseThrow();
+        assertEquals("USB Serial Port (behind hub 9)", behind.display());
+        assertEquals(List.of("USB Serial Port (COM7)"), behind.children());
+        UsbDevice hub = devices.stream().filter(d -> d.address().equals("9")).findFirst().orElseThrow();
+        assertTrue(hub.children().isEmpty(), "the hub does not swallow the device behind it");
+    }
 
     @Test
     void parsesRootHubs() {
@@ -61,7 +83,7 @@ class UsbCaptureServiceTest {
     @Test
     void parsesDeviceTreeIntoTopLevelDevices() {
         List<UsbDevice> devices = UsbCaptureService.parseDevices(CONFIG);
-        assertEquals(List.of("6", "5", "1", "2", "7"), devices.stream().map(UsbDevice::address).toList());
+        assertEquals(List.of("6", "5", "1", "2", "7", "9", "12"), devices.stream().map(UsbDevice::address).toList());
         UsbDevice six = devices.get(0);
         assertEquals("USB Composite Device", six.display());
         assertEquals(List.of("USB Input Device", "HID Keyboard Device"), six.children(), "grandchildren fold into the root device");

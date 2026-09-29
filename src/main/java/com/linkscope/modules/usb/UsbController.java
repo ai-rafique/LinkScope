@@ -425,19 +425,32 @@ public class UsbController implements ModuleController {
         hubHint.setText("Listing root hubs…");
         Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
             try {
-                List<Hub> hubs = UsbCaptureService.hubs();
+                List<Hub> hubs = UsbCaptureService.hubsWithCounts();
                 FxThread.run(() -> {
                     String keep = pendingHub != null ? pendingHub : hubCombo.getValue() != null ? hubCombo.getValue().name() : null;
+                    boolean fromPreset = pendingHub != null;
                     pendingHub = null;
                     Hub current = hubCombo.getValue();
                     hubCombo.getItems().setAll(hubs);
-                    Hub pick = hubs.stream().filter(h -> h.name().equals(keep)).findFirst().orElse(hubs.isEmpty() ? null : hubs.get(0));
+                    Hub busiest = hubs.stream().max(java.util.Comparator.comparingInt(Hub::deviceCount)).orElse(null);
+                    Hub kept = hubs.stream().filter(h -> h.name().equals(keep)).findFirst().orElse(null);
+                    // Keep the user's or the preset's hub, unless it is empty and another hub has devices:
+                    // hub numbering moves between reboots and an empty list is never what they wanted.
+                    Hub pick = kept != null && (fromPreset || kept.deviceCount() > 0 || busiest == null || busiest.deviceCount() <= 0)
+                            ? kept : busiest;
                     hubCombo.setValue(pick);
-                    if (pick != null && pick.equals(current)) {
+                    if (pick != null && pick.name().equals(current == null ? null : current.name())) {
                         loadDevices(pick);
                     }
+                    int total = hubs.stream().mapToInt(h -> Math.max(0, h.deviceCount())).sum();
                     hubHint.setText(hubs.isEmpty() ? "No USBPcap root hubs found (is the driver installed and Windows restarted?)"
-                            : hubs.size() + " root hub(s)");
+                            : hubs.size() + " root hub(s), " + total + " device(s)"
+                            + (kept != null && pick != kept ? " · switched to " + pick.display() + " because " + kept.display() + " is empty" : ""));
+                    String others = hubs.stream().filter(h -> h != pick && h.deviceCount() > 0)
+                            .map(h -> h.display() + " has " + h.deviceCount()).collect(java.util.stream.Collectors.joining(", "));
+                    deviceList.setPlaceholder(new Label(others.isEmpty()
+                            ? "No devices reported on this hub. If you just plugged one in, check it shows in Device Manager, then Refresh."
+                            : "No devices on this hub; " + others + "."));
                 });
             } catch (IOException ex) {
                 FxThread.run(() -> {
