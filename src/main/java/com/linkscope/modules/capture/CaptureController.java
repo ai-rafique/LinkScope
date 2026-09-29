@@ -107,6 +107,7 @@ public class CaptureController implements ModuleController {
             }
         });
         refreshButton.setOnAction(e -> loadDevices());
+        deviceCombo.setOnShowing(e -> loadDevices());
         loadDevices();
 
         numberColumn.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().number())));

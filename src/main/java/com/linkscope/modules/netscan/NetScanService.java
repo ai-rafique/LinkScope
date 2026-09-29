@@ -15,6 +15,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,7 +23,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Sweeps a /24 (base.0 to base.255, or a sub-range) to find which addresses answer.
  * Each host gets an ICMP/echo reachability check plus, optionally, a parallel TCP
- * touch on a few common ports so hosts that drop ping still show up as UP.
+ * touch on a few common ports so hosts that drop ping still show up as UP. After the
+ * sweep the OS neighbour table is read: a host that answered ARP is present even if it
+ * ignored everything else, and every present host gets its MAC address.
  */
 public final class NetScanService extends AbstractService {
     public static final String TAG = "SCAN";
@@ -39,9 +42,19 @@ public final class NetScanService extends AbstractService {
         }
     }
 
-    /** One swept address. {@code via} says what proved it up: "ping", "tcp" or both. */
+    /**
+     * One swept address. {@code via} says what proved it up: "ping", "tcp", "ping + tcp" or
+     * "arp" (neighbour table only); {@code role} is "this PC", "gateway" or "".
+     */
     public record HostResult(String ip, int lastOctet, HostState state, long rttMs, String hostname,
-                             List<Integer> openPorts, String via) {
+                             List<Integer> openPorts, String via, String mac, String role) {
+        public HostResult(String ip, int lastOctet, HostState state, long rttMs, String hostname, List<Integer> openPorts, String via) {
+            this(ip, lastOctet, state, rttMs, hostname, openPorts, via, "", "");
+        }
+
+        public HostResult withMac(String mac, HostState state, String via) {
+            return new HostResult(ip, lastOctet, state, rttMs, hostname, openPorts, via, mac, role);
+        }
     }
 
     private final ObservableList<HostResult> results = FXCollections.observableArrayList();
@@ -55,6 +68,9 @@ public final class NetScanService extends AbstractService {
     private volatile int timeoutMs = 500;
     private volatile boolean probePorts = true;
     private volatile boolean resolveNames;
+    private volatile boolean readArp = true;
+    private volatile String selfIp = "";
+    private volatile String gatewayIp = "";
     private volatile int parallelism = 64;
     private volatile boolean running;
 
@@ -81,6 +97,10 @@ public final class NetScanService extends AbstractService {
 
     public boolean isRunning() {
         return running;
+    }
+
+    public String base() {
+        return base;
     }
 
     // --- configuration --------------------------------------------------------------
@@ -111,6 +131,21 @@ public final class NetScanService extends AbstractService {
 
     public void setResolveNames(boolean resolveNames) {
         this.resolveNames = resolveNames;
+    }
+
+    /** Read the neighbour table after the sweep to add MACs and catch ARP-only hosts (default on). */
+    public void setReadArp(boolean readArp) {
+        this.readArp = readArp;
+    }
+
+    /** Our own address on the scanned network, tagged "this PC" in the results. */
+    public void setSelfIp(String selfIp) {
+        this.selfIp = selfIp == null ? "" : selfIp;
+    }
+
+    /** The default gateway on the scanned network, tagged "gateway" in the results. */
+    public void setGatewayIp(String gatewayIp) {
+        this.gatewayIp = gatewayIp == null ? "" : gatewayIp;
     }
 
     public void setParallelism(int parallelism) {
@@ -169,7 +204,7 @@ public final class NetScanService extends AbstractService {
             upCount.set(0);
         });
         logInfo("Scanning " + base + "." + from + " – " + base + "." + to + " (timeout " + timeoutMs + " ms"
-                + (probePorts ? ", ping + tcp " + PROBE_PORTS : ", ping only") + ")");
+                + (probePorts ? ", ping + tcp " + PROBE_PORTS : ", ping only") + (readArp ? ", then ARP table" : "") + ")");
         setStatus(ModuleStatus.CONNECTING);
         exec.submit(this::run);
     }
@@ -225,6 +260,9 @@ public final class NetScanService extends AbstractService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        if (running && readArp) {
+            up.set(enrichFromArp());
+        }
         if (running) {
             running = false;
             logInfo("Scan complete: " + up.get() + " of " + count + " addresses up in "
@@ -233,13 +271,51 @@ public final class NetScanService extends AbstractService {
         }
     }
 
+    /** Adds MACs from the neighbour table and promotes ARP-only hosts to UP. Returns the new up count. */
+    private int enrichFromArp() {
+        Map<String, String> arp = ArpTable.read();
+        List<HostResult> current = FxThread.read(() -> new ArrayList<>(results));
+        if (arp.isEmpty()) {
+            return (int) current.stream().filter(r -> r.state() == HostState.UP).count();
+        }
+        List<HostResult> updated = new ArrayList<>(current.size());
+        int promoted = 0;
+        int upNow = 0;
+        for (HostResult r : current) {
+            String mac = arp.get(r.ip());
+            HostResult n = r;
+            if (mac != null) {
+                boolean wasDown = r.state() == HostState.DOWN;
+                n = r.withMac(mac, HostState.UP, wasDown ? "arp" : r.via());
+                if (wasDown) {
+                    promoted++;
+                    logInfo(r.ip() + " answers ARP only (" + mac + "): present but silent to ping and probes");
+                }
+            }
+            if (n.state() == HostState.UP) {
+                upNow++;
+            }
+            updated.add(n);
+        }
+        int finalUp = upNow;
+        FxThread.run(() -> {
+            results.setAll(updated);
+            upCount.set(finalUp);
+        });
+        if (promoted > 0) {
+            logInfo(promoted + " host(s) found through the ARP table only");
+        }
+        return upNow;
+    }
+
     private HostResult probe(int octet) {
         String ip = base + "." + octet;
+        String role = ip.equals(selfIp) ? "this PC" : ip.equals(gatewayIp) ? "gateway" : "";
         InetAddress addr;
         try {
             addr = InetAddress.getByName(ip);
         } catch (IOException e) {
-            return new HostResult(ip, octet, HostState.DOWN, -1, "", List.of(), "");
+            return new HostResult(ip, octet, HostState.DOWN, -1, "", List.of(), "", "", role);
         }
         List<Integer> open = Collections.synchronizedList(new ArrayList<>());
         CountDownLatch portsDone = new CountDownLatch(probePorts ? PROBE_PORTS.size() : 0);
@@ -281,9 +357,10 @@ public final class NetScanService extends AbstractService {
         }
         if (isUp) {
             logInfo(ip + " up via " + via + (pinged ? " (" + rtt + " ms)" : "")
-                    + (ports.isEmpty() ? "" : ", tcp " + ports) + (hostname.isEmpty() ? "" : " " + hostname));
+                    + (ports.isEmpty() ? "" : ", tcp " + ports) + (hostname.isEmpty() ? "" : " " + hostname)
+                    + (role.isEmpty() ? "" : " [" + role + "]"));
         }
-        return new HostResult(ip, octet, isUp ? HostState.UP : HostState.DOWN, pinged ? rtt : -1, hostname, ports, via);
+        return new HostResult(ip, octet, isUp ? HostState.UP : HostState.DOWN, pinged ? rtt : -1, hostname, ports, via, "", role);
     }
 
     /** Not applicable: a scan has nothing to send. */

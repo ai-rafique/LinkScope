@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -13,6 +14,7 @@
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
@@ -21,43 +23,66 @@
     <VBox styleClass="ls-panel">
         <HBox spacing="8" alignment="CENTER_LEFT">
             <Label text="Local TCP ports" styleClass="ls-panel-title"/>
+            <Label fx:id="summaryLabel" styleClass="text-muted, small"/>
             <Pane HBox.hgrow="ALWAYS"/>
             <StatusBadge fx:id="statusBadge"/>
         </HBox>
         <HBox spacing="8" alignment="CENTER_LEFT">
-            <Label text="Interface" styleClass="text-muted" minWidth="72"/>
-            <ComboBox fx:id="addressCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity">
-                <tooltip><Tooltip text="Address to probe. Loopback also sees services bound to all interfaces (0.0.0.0)."/></tooltip>
+            <Label text="Interface" styleClass="text-muted" minWidth="-Infinity"/>
+            <ComboBox fx:id="addressCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity" minWidth="200">
+                <tooltip><Tooltip text="Address to probe. Loopback also sees services bound to all interfaces (0.0.0.0). Opening the list rescans the adapters."/></tooltip>
             </ComboBox>
             <Button fx:id="refreshButton" styleClass="button-icon">
                 <graphic><FontIcon iconLiteral="fth-refresh-cw"/></graphic>
                 <tooltip><Tooltip text="Rescan network interfaces"/></tooltip>
             </Button>
-            <Label text="Ports" styleClass="text-muted"/>
-            <TextField fx:id="rangeField" text="1-1024" prefWidth="180">
+            <Label text="Ports" styleClass="text-muted" minWidth="-Infinity"/>
+            <TextField fx:id="rangeField" text="1-1024" prefWidth="200">
                 <tooltip><Tooltip text="Ranges and lists: 1-1024, 22,80,443, 8000-9000,3306. Up to 1-65535."/></tooltip>
             </TextField>
-            <Button fx:id="scanButton" text="Scan" styleClass="accent"/>
+            <MenuButton fx:id="presetsButton" text="Ranges" styleClass="small" minWidth="-Infinity">
+                <tooltip><Tooltip text="Common port ranges"/></tooltip>
+            </MenuButton>
+            <Button fx:id="scanButton" text="Scan" styleClass="accent" minWidth="-Infinity"/>
         </HBox>
-        <HBox spacing="8" alignment="CENTER_LEFT">
-            <ProgressBar fx:id="progressBar" prefWidth="240" progress="0"/>
-            <Label fx:id="summaryLabel" styleClass="text-muted"/>
-            <Pane HBox.hgrow="ALWAYS"/>
-            <ToggleButton fx:id="hideFreeToggle" text="Hide free" selected="true" styleClass="small"/>
-        </HBox>
+        <ProgressBar fx:id="progressBar" maxWidth="Infinity" progress="0"/>
+        <StackPane fx:id="stripHost" alignment="CENTER_LEFT" minHeight="22"/>
     </VBox>
+
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <ToggleButton fx:id="listeningTile" text="0  listening" selected="true" styleClass="ls-state-tile, tile-listening">
+            <tooltip><Tooltip text="A server accepts connections on the port. Click to show or hide these rows."/></tooltip>
+        </ToggleButton>
+        <ToggleButton fx:id="inUseTile" text="0  in use" selected="true" styleClass="ls-state-tile, tile-inuse">
+            <tooltip><Tooltip text="Bound without a listener, for example an established connection. Click to show or hide."/></tooltip>
+        </ToggleButton>
+        <ToggleButton fx:id="reservedTile" text="0  reserved" selected="true" styleClass="ls-state-tile, tile-reserved">
+            <tooltip><Tooltip text="The OS refuses the bind: Windows excluded port ranges, or ports below 1024 without root. Click to show or hide."/></tooltip>
+        </ToggleButton>
+        <ToggleButton fx:id="unknownTile" text="0  unknown" selected="true" styleClass="ls-state-tile, tile-unknown">
+            <tooltip><Tooltip text="Neither test gave a clear answer (timeouts, odd errors). Click to show or hide."/></tooltip>
+        </ToggleButton>
+        <ToggleButton fx:id="freeTile" text="0  free" styleClass="ls-state-tile, tile-free">
+            <tooltip><Tooltip text="Nothing there. Hidden by default; click to show them as ranges."/></tooltip>
+        </ToggleButton>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="searchField" promptText="port number or process name" prefWidth="220">
+            <tooltip><Tooltip text="Filter rows: a port number finds the row that contains it; text matches process, service and state"/></tooltip>
+        </TextField>
+    </HBox>
 
     <TableView fx:id="table" VBox.vgrow="ALWAYS" minHeight="120">
         <columns>
-            <TableColumn fx:id="portColumn" text="Port" prefWidth="80"/>
-            <TableColumn fx:id="stateColumn" text="State" prefWidth="120"/>
-            <TableColumn fx:id="ownerColumn" text="Process" prefWidth="260"/>
-            <TableColumn fx:id="detailColumn" text="Detail" prefWidth="360"/>
+            <TableColumn fx:id="portColumn" text="Port(s)" prefWidth="130"/>
+            <TableColumn fx:id="stateColumn" text="State" prefWidth="170"/>
+            <TableColumn fx:id="serviceColumn" text="Service" prefWidth="150"/>
+            <TableColumn fx:id="ownerColumn" text="Process" prefWidth="240"/>
+            <TableColumn fx:id="detailColumn" text="Detail" prefWidth="320"/>
         </columns>
     </TableView>
 
     <Label styleClass="ls-hint" wrapText="true"
-           text="Each port gets a connect and a bind test. Listening = a server accepts connections. In use = bound without a listener (an established connection, for example). Reserved = the OS refuses the bind, such as Windows excluded port ranges or ports below 1024 without root. Free = nothing there."/>
+           text="Each port gets a connect and a bind test. Listening and in-use ports get a row each; free, reserved and unknown ports fold into ranges. The tiles filter the table."/>
     <padding>
         <Insets top="16" right="16" bottom="16" left="16"/>
     </padding>

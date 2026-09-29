@@ -13,6 +13,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.linkscope.modules.multicast.MulticastController" styleClass="ls-module">
@@ -37,9 +38,15 @@
             <TextField fx:id="portField" text="5000" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
 
             <Label text="Interface" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-            <ComboBox fx:id="interfaceCombo" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.columnSpan="3">
-                <tooltip><Tooltip text="Network interface to join on and send from. Auto picks the first up, multicast-capable, non-loopback interface."/></tooltip>
-            </ComboBox>
+            <HBox spacing="8" alignment="CENTER_LEFT" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.columnSpan="3">
+                <ComboBox fx:id="interfaceCombo" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+                    <tooltip><Tooltip text="Network interface to join on and send from. Auto picks the first physical adapter with an IPv4 address. Opening the list rescans the adapters."/></tooltip>
+                </ComboBox>
+                <Button fx:id="refreshInterfacesButton" styleClass="button-icon">
+                    <graphic><FontIcon iconLiteral="fth-refresh-cw"/></graphic>
+                    <tooltip><Tooltip text="Rescan network interfaces"/></tooltip>
+                </Button>
+            </HBox>
 
             <Label text="TTL" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
             <TextField fx:id="ttlField" text="1" GridPane.rowIndex="2" GridPane.columnIndex="1">

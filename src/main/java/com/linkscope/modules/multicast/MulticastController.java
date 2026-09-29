@@ -40,6 +40,7 @@ public class MulticastController implements ModuleController {
     @FXML private TextField groupField;
     @FXML private TextField portField;
     @FXML private ComboBox<IfaceChoice> interfaceCombo;
+    @FXML private Button refreshInterfacesButton;
     @FXML private TextField ttlField;
     @FXML private CheckBox loopbackCheck;
     @FXML private Button joinButton;
@@ -72,6 +73,8 @@ public class MulticastController implements ModuleController {
         });
         interfaceCombo.getItems().setAll(IfaceChoice.AUTO);
         interfaceCombo.getSelectionModel().selectFirst();
+        refreshInterfacesButton.setOnAction(e -> loadInterfaces());
+        interfaceCombo.setOnShowing(e -> loadInterfaces());
         loadInterfaces();
 
         service.statusProperty().addListener((obs, old, now) -> updateJoinButton(now));

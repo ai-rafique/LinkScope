@@ -182,6 +182,134 @@
     -fx-text-fill: -color-warning-fg;
 }
 
+/* --- Net Scan: summary tiles and the /24 host grid ------------------------------ */
+
+.ls-tiles {
+    -fx-padding: 8 0 4 0;
+}
+
+.ls-tile {
+    -fx-min-width: 96;
+    -fx-padding: 8 12 8 12;
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 8;
+    -fx-border-color: -color-border-default;
+    -fx-border-radius: 8;
+}
+
+.ls-tile-value {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.ls-tile-up {
+    -fx-text-fill: -color-success-fg;
+}
+
+.ls-tile-caption {
+    -fx-font-size: 11px;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.ls-hostgrid {
+    -fx-padding: 4 0 4 0;
+}
+
+.ls-hostcell {
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 4;
+    -fx-border-color: -color-border-default;
+    -fx-border-radius: 4;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+
+.ls-hostcell-text {
+    -fx-font-size: 11px;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.ls-hostcell.pending {
+    -fx-border-style: dashed;
+}
+
+.ls-hostcell.skipped {
+    -fx-border-style: dashed;
+    -fx-opacity: 0.35;
+}
+
+.ls-hostcell.down {
+    -fx-background-color: transparent;
+}
+
+.ls-hostcell.up {
+    -fx-background-color: -color-success-emphasis;
+    -fx-border-color: -color-success-emphasis;
+}
+
+.ls-hostcell.arp {
+    -fx-background-color: -color-warning-emphasis;
+    -fx-border-color: -color-warning-emphasis;
+}
+
+.ls-hostcell.up .ls-hostcell-text,
+.ls-hostcell.arp .ls-hostcell-text {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.ls-hostcell.self {
+    -fx-border-color: -color-accent-emphasis;
+    -fx-border-width: 2;
+}
+
+.ls-hostcell.gateway {
+    -fx-border-color: -color-accent-emphasis;
+    -fx-border-width: 2;
+    -fx-border-style: segments(3, 2);
+}
+
+.ls-hostcell:hover {
+    -fx-border-color: -color-accent-fg;
+}
+
+.ls-hostcell:selected {
+    -fx-effect: dropshadow(gaussian, -color-accent-emphasis, 8, 0.6, 0, 0);
+}
+
+.ls-legend-swatch {
+    -fx-min-width: 18;
+    -fx-pref-width: 18;
+    -fx-min-height: 14;
+    -fx-pref-height: 14;
+    -fx-cursor: default;
+}
+
+.ls-flat-scroll {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.ls-flat-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* --- Ports: state tiles that filter the table ------------------------------------ */
+
+.ls-state-tile {
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+}
+
+.ls-state-tile:selected.tile-listening { -fx-background-color: -color-success-emphasis; -fx-text-fill: white; }
+.ls-state-tile:selected.tile-inuse { -fx-background-color: -color-warning-emphasis; -fx-text-fill: white; }
+.ls-state-tile:selected.tile-reserved { -fx-background-color: -color-danger-emphasis; -fx-text-fill: white; }
+.ls-state-tile:selected.tile-unknown { -fx-background-color: -color-accent-emphasis; -fx-text-fill: white; }
+.ls-state-tile:selected.tile-free { -fx-background-color: -color-neutral-emphasis; -fx-text-fill: white; }
+
 .ls-console,
 .ls-console .content {
     -fx-background-color: -color-bg-inset;

@@ -79,9 +79,19 @@ Tunnels and SFTP can reuse the SSH tab's login instead of connecting again.
 - **Decoder** – paste bytes, describe the layout as field widths (`2 3 5 6 4`, with hints
   like `4f 2i 5s` and repeated groups `[2 4]*3`), and read every field as integers, floats
   and text in both byte orders. Any log line can be sent here.
-- **Net Scan** – sweep a /24 to find which addresses answer (ping plus common TCP ports).
-- **Ports** – survey local TCP ports on an interface: listening (with owning process),
-  in use, reserved by the OS, or free.
+- **Net Scan** – pick a network interface and sweep its /24. Every address is a cell on a
+  16 × 16 grid that fills as answers arrive: filled for ping or an open port, amber for
+  hosts that answered ARP only (present but silent), hollow for no answer, with this PC
+  and the gateway marked. The table below lists the hosts that are up with MAC address,
+  hostname, ping time and open ports; copy the list with one click.
+- **Ports** – survey local TCP ports on an interface. A strip shows every scanned port
+  as a coloured slice, state tiles (listening, in use, reserved, unknown, free) give the
+  counts and filter the table, and runs of free ports fold into ranges so the listening
+  and in-use ports stand out, each with its process and well-known service name.
+
+Interface dropdowns (Multicast, Capture, Net Scan, Ports) rescan the adapters whenever
+they are opened, and each has a refresh button, so a cable plugged in after launch shows
+up without restarting.
 
 **Shared log** – every TX/RX byte from every module in one place with hex/ASCII, absolute
 or delta timestamps, per-module and per-kind filter chips, text filter, and export as text

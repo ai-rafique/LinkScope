@@ -68,7 +68,8 @@ com.linkscope
 │               LogSink/LogEntry, FxThread, PresetStore/Preset/EnvResolver,
 │               PayloadCodec (hex/ASCII escapes), PayloadDecoder (hex dump, typed views),
 │               ByteLayout (decoder grammar), PcapFiles (pure-Java pcap read/tail/write),
-│               NetInterfaces (physical-first adapter ranking), AnsiText, AppInfo
+│               NetInterfaces (physical-first adapter ranking, IPv4 networks, default gateways),
+│               KnownPorts (port → service names), AnsiText, AppInfo
 │   ├── protocol/  ModbusDecoder, ModbusEncoder, Crc16 (presets, params, pasted tables)
 │   ├── slf4j/     bridge into LogSink
 │   └── ui/        SendBarController, HistoryListController, StatusBadge, Toasts,
@@ -104,8 +105,8 @@ Sidebar order and grouping come from `ModuleRegistry.MODULES` (`id, title, group
 | | Telnet `telnet` | RFC 854 option negotiation, console | negotiation replies are written synchronously on the read thread (ordering matters) |
 | Tools | Capture `capture` | Wireshark-style packet table over Npcap, BPF capture filter, display filter language, pcap open/save | pcap4j; `PacketDissector` (Ethernet/ARP/IP/TCP/UDP/ICMP/DNS/Modbus TCP), `UsbPcapDissector` (link type 249), `DisplayFilter` (recursive-descent parser → `Predicate<PacketRow>`), `PacketRow.fields` for protocol-specific filter fields (`usb.*`) |
 | | Decoder `decoder` | paste bytes + a layout (`2 3 5 6 4`, hints `4f 2i 5s`, groups `[2 4]*3`) → typed fields in both byte orders | `ByteLayout`, `PayloadDecoder`; any bytes anywhere reach it through `DecoderBridge.open(bytes)` |
-| | Net Scan `netscan` | sweep a /24 (ping + common TCP ports) | |
-| | Ports `ports` | local TCP ports: listening (owner process), in use, reserved, free | `PortOwners` snapshots the socket table (Windows lets a bind succeed beside an established connection, so bind-probing alone is not enough) |
+| | Net Scan `netscan` | pick an interface, sweep its /24, 16 × 16 host grid + table | `HostGrid` (cells per last octet), `ArpTable` (neighbour table after the sweep: MACs, ARP-only hosts promoted to up), gateway and self tagged via `NetInterfaces.defaultGateways()` |
+| | Ports `ports` | local TCP ports: listening (owner process), in use, reserved, free; strip + state tiles + collapsed ranges | `PortOwners` snapshots the socket table (Windows lets a bind succeed beside an established connection, so bind-probing alone is not enough); `PortStrip` canvas, `PortRows.collapse` folds free/reserved/unknown runs; service names from `core/KnownPorts` |
 
 ### 4.1 The module contract (how every tab is built)
 

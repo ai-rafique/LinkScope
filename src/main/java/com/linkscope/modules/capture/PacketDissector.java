@@ -24,14 +24,7 @@ import java.util.Map;
 public final class PacketDissector {
 
     /** Well-known ports to application names, used for the protocol column and display filters. */
-    static final Map<Integer, String> APPS = Map.ofEntries(
-            Map.entry(20, "FTP"), Map.entry(21, "FTP"), Map.entry(22, "SSH"), Map.entry(23, "Telnet"),
-            Map.entry(25, "SMTP"), Map.entry(53, "DNS"), Map.entry(67, "DHCP"), Map.entry(68, "DHCP"),
-            Map.entry(80, "HTTP"), Map.entry(110, "POP3"), Map.entry(123, "NTP"), Map.entry(143, "IMAP"),
-            Map.entry(161, "SNMP"), Map.entry(162, "SNMP"), Map.entry(443, "TLS"), Map.entry(502, "Modbus"),
-            Map.entry(514, "Syslog"), Map.entry(1883, "MQTT"), Map.entry(1900, "SSDP"), Map.entry(3389, "RDP"),
-            Map.entry(4222, "NATS"), Map.entry(5060, "SIP"), Map.entry(5353, "mDNS"), Map.entry(5683, "CoAP"),
-            Map.entry(8080, "HTTP"), Map.entry(8443, "HTTPS"), Map.entry(8883, "MQTT/TLS"), Map.entry(9092, "Kafka"));
+    static final Map<Integer, String> APPS = com.linkscope.core.KnownPorts.NAMES;
 
     private PacketDissector() {
     }
