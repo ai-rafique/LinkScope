@@ -7,14 +7,16 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
@@ -37,7 +39,7 @@
                 <tooltip><Tooltip text="Rescan network interfaces"/></tooltip>
             </Button>
             <Label text="Ports" styleClass="text-muted" minWidth="-Infinity"/>
-            <TextField fx:id="rangeField" text="1-1024" prefWidth="200">
+            <TextField fx:id="rangeField" text="1-1024" prefWidth="200" minWidth="120">
                 <tooltip><Tooltip text="Ranges and lists: 1-1024, 22,80,443, 8000-9000,3306. Up to 1-65535."/></tooltip>
             </TextField>
             <MenuButton fx:id="presetsButton" text="Ranges" styleClass="small" minWidth="-Infinity">
@@ -45,8 +47,17 @@
             </MenuButton>
             <Button fx:id="scanButton" text="Scan" styleClass="accent" minWidth="-Infinity"/>
         </HBox>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Ports I need" styleClass="text-muted" minWidth="-Infinity"/>
+            <TextField fx:id="neededField" promptText="502, 1883, 16000-16010" prefWidth="220" minWidth="140">
+                <tooltip><Tooltip text="The ports your own software wants. Check scans just these and says for each whether it is free, or taken and by whom. They are also ringed on the grid."/></tooltip>
+            </TextField>
+            <Button fx:id="checkButton" text="Check" styleClass="small" minWidth="-Infinity">
+                <graphic><FontIcon iconLiteral="fth-check-circle"/></graphic>
+            </Button>
+            <FlowPane fx:id="verdictBox" hgap="6" vgap="4" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS"/>
+        </HBox>
         <ProgressBar fx:id="progressBar" maxWidth="Infinity" progress="0"/>
-        <StackPane fx:id="stripHost" alignment="CENTER_LEFT" minHeight="22"/>
     </VBox>
 
     <HBox spacing="8" alignment="CENTER_LEFT">
@@ -71,18 +82,25 @@
         </TextField>
     </HBox>
 
-    <TableView fx:id="table" VBox.vgrow="ALWAYS" minHeight="120">
-        <columns>
-            <TableColumn fx:id="portColumn" text="Port(s)" prefWidth="130"/>
-            <TableColumn fx:id="stateColumn" text="State" prefWidth="170"/>
-            <TableColumn fx:id="serviceColumn" text="Service" prefWidth="150"/>
-            <TableColumn fx:id="ownerColumn" text="Process" prefWidth="240"/>
-            <TableColumn fx:id="detailColumn" text="Detail" prefWidth="320"/>
-        </columns>
-    </TableView>
+    <SplitPane orientation="VERTICAL" dividerPositions="0.5" VBox.vgrow="ALWAYS">
+        <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="ls-flat-scroll">
+            <VBox fx:id="gridHost">
+                <padding><Insets top="4" right="4" bottom="4" left="4"/></padding>
+            </VBox>
+        </ScrollPane>
+        <TableView fx:id="table" minHeight="100">
+            <columns>
+                <TableColumn fx:id="portColumn" text="Port(s)" prefWidth="130"/>
+                <TableColumn fx:id="stateColumn" text="State" prefWidth="170"/>
+                <TableColumn fx:id="serviceColumn" text="Service" prefWidth="150"/>
+                <TableColumn fx:id="ownerColumn" text="Process" prefWidth="240"/>
+                <TableColumn fx:id="detailColumn" text="Detail" prefWidth="320"/>
+            </columns>
+        </TableView>
+    </SplitPane>
 
     <Label styleClass="ls-hint" wrapText="true"
-           text="Each port gets a connect and a bind test. Listening and in-use ports get a row each; free, reserved and unknown ports fold into ranges. The tiles filter the table."/>
+           text="Blocks of 256 ports show how many are occupied inside; click one to see its ports. Green listening, amber in use, red reserved, hollow free. Ringed cells are the ports you need."/>
     <padding>
         <Insets top="16" right="16" bottom="16" left="16"/>
     </padding>

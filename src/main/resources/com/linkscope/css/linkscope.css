@@ -211,10 +211,13 @@
     -fx-text-fill: -color-fg-muted;
 }
 
+.ls-cellgrid,
 .ls-hostgrid {
     -fx-padding: 4 0 4 0;
 }
 
+/* Cells shared by the host grid and the port grids. State classes colour them; marks add rings. */
+.ls-cell,
 .ls-hostcell {
     -fx-background-color: -color-bg-subtle;
     -fx-background-radius: 4;
@@ -224,57 +227,103 @@
     -fx-cursor: hand;
 }
 
+.ls-cell-text,
 .ls-hostcell-text {
     -fx-font-size: 11px;
     -fx-text-fill: -color-fg-muted;
 }
 
-.ls-hostcell.pending {
+.ls-cell.pending, .ls-hostcell.pending {
     -fx-border-style: dashed;
 }
 
-.ls-hostcell.skipped {
+.ls-cell.skipped, .ls-hostcell.skipped {
     -fx-border-style: dashed;
     -fx-opacity: 0.35;
 }
 
-.ls-hostcell.down {
+.ls-cell.down, .ls-hostcell.down,
+.ls-cell.free {
     -fx-background-color: transparent;
 }
 
-.ls-hostcell.up {
+.ls-cell.up, .ls-hostcell.up,
+.ls-cell.listening {
     -fx-background-color: -color-success-emphasis;
     -fx-border-color: -color-success-emphasis;
 }
 
-.ls-hostcell.arp {
+.ls-cell.arp, .ls-hostcell.arp,
+.ls-cell.inuse {
     -fx-background-color: -color-warning-emphasis;
     -fx-border-color: -color-warning-emphasis;
 }
 
-.ls-hostcell.up .ls-hostcell-text,
-.ls-hostcell.arp .ls-hostcell-text {
+.ls-cell.reserved {
+    -fx-background-color: -color-danger-emphasis;
+    -fx-border-color: -color-danger-emphasis;
+}
+
+.ls-cell.unknown {
+    -fx-background-color: -color-accent-emphasis;
+    -fx-border-color: -color-accent-emphasis;
+}
+
+.ls-cell.up .ls-cell-text, .ls-hostcell.up .ls-hostcell-text,
+.ls-cell.arp .ls-cell-text, .ls-hostcell.arp .ls-hostcell-text,
+.ls-cell.listening .ls-cell-text,
+.ls-cell.inuse .ls-cell-text,
+.ls-cell.reserved .ls-cell-text,
+.ls-cell.unknown .ls-cell-text {
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
 
-.ls-hostcell.self {
+.ls-cell.self, .ls-hostcell.self,
+.ls-cell.needed {
     -fx-border-color: -color-accent-emphasis;
     -fx-border-width: 2;
 }
 
-.ls-hostcell.gateway {
+.ls-cell.gateway, .ls-hostcell.gateway {
     -fx-border-color: -color-accent-emphasis;
     -fx-border-width: 2;
     -fx-border-style: segments(3, 2);
 }
 
-.ls-hostcell:hover {
+.ls-cell:hover, .ls-hostcell:hover {
     -fx-border-color: -color-accent-fg;
 }
 
-.ls-hostcell:selected {
+.ls-cell:selected, .ls-hostcell:selected {
     -fx-effect: dropshadow(gaussian, -color-accent-emphasis, 8, 0.6, 0, 0);
+}
+
+/* Verdict chips for the "ports I need" check */
+.ls-verdict {
+    -fx-padding: 4 10 4 10;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-font-size: 12px;
+}
+
+.ls-verdict.ok {
+    -fx-background-color: -color-success-subtle;
+    -fx-border-color: -color-success-emphasis;
+    -fx-text-fill: -color-success-fg;
+}
+
+.ls-verdict.taken {
+    -fx-background-color: -color-danger-subtle;
+    -fx-border-color: -color-danger-emphasis;
+    -fx-text-fill: -color-danger-fg;
+}
+
+.ls-verdict.unclear {
+    -fx-background-color: -color-warning-subtle;
+    -fx-border-color: -color-warning-emphasis;
+    -fx-text-fill: -color-warning-fg;
 }
 
 .ls-legend-swatch {

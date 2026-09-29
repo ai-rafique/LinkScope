@@ -73,7 +73,8 @@ com.linkscope
 │   ├── protocol/  ModbusDecoder, ModbusEncoder, Crc16 (presets, params, pasted tables)
 │   ├── slf4j/     bridge into LogSink
 │   └── ui/        SendBarController, HistoryListController, StatusBadge, Toasts,
-│                  DecoderBridge (any bytes → Decoder tab), Fields (form helpers)
+│                  DecoderBridge (any bytes → Decoder tab), Fields (form helpers),
+│                  CellGrid (responsive labelled cell grid: hosts, port blocks, ports)
 └── modules/    one package per sidebar entry (see §4), plus
                 pubsub/ (shared broker panel + PubSubModule interface)
 ```
@@ -105,8 +106,8 @@ Sidebar order and grouping come from `ModuleRegistry.MODULES` (`id, title, group
 | | Telnet `telnet` | RFC 854 option negotiation, console | negotiation replies are written synchronously on the read thread (ordering matters) |
 | Tools | Capture `capture` | Wireshark-style packet table over Npcap, BPF capture filter, display filter language, pcap open/save | pcap4j; `PacketDissector` (Ethernet/ARP/IP/TCP/UDP/ICMP/DNS/Modbus TCP), `UsbPcapDissector` (link type 249), `DisplayFilter` (recursive-descent parser → `Predicate<PacketRow>`), `PacketRow.fields` for protocol-specific filter fields (`usb.*`) |
 | | Decoder `decoder` | paste bytes + a layout (`2 3 5 6 4`, hints `4f 2i 5s`, groups `[2 4]*3`) → typed fields in both byte orders | `ByteLayout`, `PayloadDecoder`; any bytes anywhere reach it through `DecoderBridge.open(bytes)` |
-| | Net Scan `netscan` | pick an interface, sweep its /24, 16 × 16 host grid + table | `HostGrid` (cells per last octet), `ArpTable` (neighbour table after the sweep: MACs, ARP-only hosts promoted to up), gateway and self tagged via `NetInterfaces.defaultGateways()` |
-| | Ports `ports` | local TCP ports: listening (owner process), in use, reserved, free; strip + state tiles + collapsed ranges | `PortOwners` snapshots the socket table (Windows lets a bind succeed beside an established connection, so bind-probing alone is not enough); `PortStrip` canvas, `PortRows.collapse` folds free/reserved/unknown runs; service names from `core/KnownPorts` |
+| | Net Scan `netscan` | pick an interface, sweep its /24, 16 × 16 host grid + table | `HostGrid` (256 cells on `core/ui/CellGrid`, the width-filling grid), `ArpTable` (neighbour table after the sweep: MACs, ARP-only hosts promoted to up), gateway and self tagged via `NetInterfaces.defaultGateways()` |
+| | Ports `ports` | local TCP ports: listening (owner process), in use, reserved, free; two-level grid + state tiles + collapsed ranges + "ports I need" verdicts | `PortOwners` snapshots the socket table (Windows lets a bind succeed beside an established connection, so bind-probing alone is not enough); `PortGrid` (blocks of 256 → ports) on `core/ui/CellGrid`, `PortBlocks` (aggregation, verdicts), `PortRows.collapse` folds free/reserved/unknown runs; service names from `core/KnownPorts` |
 
 ### 4.1 The module contract (how every tab is built)
 

@@ -84,10 +84,14 @@ Tunnels and SFTP can reuse the SSH tab's login instead of connecting again.
   hosts that answered ARP only (present but silent), hollow for no answer, with this PC
   and the gateway marked. The table below lists the hosts that are up with MAC address,
   hostname, ping time and open ports; copy the list with one click.
-- **Ports** – survey local TCP ports on an interface. A strip shows every scanned port
-  as a coloured slice, state tiles (listening, in use, reserved, unknown, free) give the
-  counts and filter the table, and runs of free ports fold into ranges so the listening
-  and in-use ports stand out, each with its process and well-known service name.
+- **Ports** – survey local TCP ports on an interface. The result is a two-level grid that
+  fills the window: 256 blocks of 256 ports, each with a badge for how many are occupied
+  inside and coloured by what matters most (green listening, amber in use, red reserved),
+  and a click opens a block to show its ports one by one. State tiles give the counts and
+  filter the table, and runs of free ports fold into ranges so the occupied ports stand
+  out, each with its process and well-known service name. A **Ports I need** box takes
+  the ports your own software wants, scans just those, and answers per port: free, or
+  taken and by whom, so a clash is caught before the software fails to bind.
 
 Interface dropdowns (Multicast, Capture, Net Scan, Ports) rescan the adapters whenever
 they are opened, and each has a refresh button, so a cable plugged in after launch shows
