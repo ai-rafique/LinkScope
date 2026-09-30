@@ -389,6 +389,18 @@ public class NetScanController implements ModuleController {
     }
 
     @Override
+    public boolean navigate(String target) {
+        switch (target) {
+            case "focus:network" -> com.linkscope.core.ui.Highlight.flash(networkCombo);
+            case "focus:arp" -> com.linkscope.core.ui.Highlight.flash(arpCheck);
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
     public void shutdown() {
         service.stop();
     }

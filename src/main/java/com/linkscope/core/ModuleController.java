@@ -32,4 +32,13 @@ public interface ModuleController {
     default Map<ModuleStatus, String> statusLabels() {
         return Map.of();
     }
+
+    /**
+     * Takes the user to a place inside the tab, named by the help catalogue: {@code view:stream},
+     * {@code focus:needed}, ... Implementations switch the view, focus the control and usually
+     * flash it with {@link com.linkscope.core.ui.Highlight}. Return false for unknown targets.
+     */
+    default boolean navigate(String target) {
+        return false;
+    }
 }

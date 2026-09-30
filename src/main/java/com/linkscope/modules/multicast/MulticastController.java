@@ -187,4 +187,12 @@ public class MulticastController implements ModuleController {
     public void shutdown() {
         service.stop();
     }
+    @Override
+    public boolean navigate(String target) {
+        if (target.equals("focus:interface")) {
+            com.linkscope.core.ui.Highlight.flash(interfaceCombo);
+            return true;
+        }
+        return false;
+    }
 }

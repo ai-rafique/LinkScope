@@ -118,7 +118,13 @@ are only stored in presets as placeholders. See `.env.example`.
 **Status bar** – the selected module and its state on the left; the version
 (major.minor.patch) and rights line on the right, with build details in its tooltip.
 
-**Keyboard** – `Ctrl+K` jump to a module, `Ctrl+1..9` first nine modules, `Ctrl+B`
+**Find anything** – `Ctrl+K` or the `?` button opens a palette: type a feature name or a
+plain question ("rumble", "which ports are free", "crc table", "watch serial bytes another
+program sends") and pick a result to land on the right tab with the control highlighted.
+Ranking is a fixed BM25 over a checked-in catalogue with synonyms and typo tolerance, so
+the same words always lead to the same place. An empty query lists the whole map of the app.
+
+**Keyboard** – `Ctrl+K` find a feature, `Ctrl+1..9` first nine modules, `Ctrl+B`
 collapse the sidebar, `` Ctrl+` `` show/hide the log, `Ctrl+L` clear it, `Ctrl+H` hex,
 `Ctrl+I` send the selected log line to the Decoder, `Enter` sends in any payload field,
 `Up`/`Down` recall history.

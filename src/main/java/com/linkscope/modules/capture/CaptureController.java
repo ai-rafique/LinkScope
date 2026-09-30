@@ -386,6 +386,19 @@ public class CaptureController implements ModuleController {
     }
 
     @Override
+    public boolean navigate(String target) {
+        switch (target) {
+            case "focus:bpf" -> com.linkscope.core.ui.Highlight.flash(bpfField);
+            case "focus:displayFilter" -> com.linkscope.core.ui.Highlight.flash(displayFilterField);
+            case "focus:open" -> com.linkscope.core.ui.Highlight.flash(openButton);
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
     public void shutdown() {
         service.stop();
     }

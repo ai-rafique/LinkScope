@@ -15,12 +15,12 @@ public final class AppInfo {
     private AppInfo() {
     }
 
-    /** The build version such as "1.0.1", or "dev" when running from sources without the processed resource. */
+    /** The build version such as "1.1.1", or "dev" when running from sources without the processed resource. */
     public static String version() {
         return VERSION;
     }
 
-    /** Short line for the status bar: {@code v1.0.1 · © 2026 LinkScope · All rights reserved}. */
+    /** Short line for the status bar: {@code v1.1.1 · © 2026 LinkScope · All rights reserved}. */
     public static String statusLine() {
         return "v" + VERSION + " · " + RIGHTS;
     }

@@ -348,4 +348,12 @@ public class DecoderController implements ModuleController {
     public void shutdown() {
         // nothing to release
     }
+    @Override
+    public boolean navigate(String target) {
+        if (target.equals("focus:layout")) {
+            com.linkscope.core.ui.Highlight.flash(layoutField);
+            return true;
+        }
+        return false;
+    }
 }

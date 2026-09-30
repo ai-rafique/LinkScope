@@ -136,4 +136,12 @@ public class UdpController implements ModuleController {
     public void shutdown() {
         service.stop();
     }
+    @Override
+    public boolean navigate(String target) {
+        if (target.equals("focus:broadcast")) {
+            com.linkscope.core.ui.Highlight.flash(broadcastCheck);
+            return true;
+        }
+        return false;
+    }
 }

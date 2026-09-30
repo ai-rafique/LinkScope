@@ -693,6 +693,25 @@ public class UsbController implements ModuleController {
     }
 
     @Override
+    public boolean navigate(String target) {
+        switch (target) {
+            case "view:stream" -> {
+                streamToggle.setSelected(true);
+                com.linkscope.core.ui.Highlight.flash(streamDeviceCombo);
+            }
+            case "view:records" -> {
+                recordsToggle.setSelected(true);
+                com.linkscope.core.ui.Highlight.flash(table);
+            }
+            case "focus:devices" -> com.linkscope.core.ui.Highlight.flash(deviceList);
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
     public void shutdown() {
         service.stop();
     }

@@ -588,4 +588,15 @@ public class ModbusController implements ModuleController {
     public void shutdown() {
         service.stop();
     }
+    @Override
+    public boolean navigate(String target) {
+        switch (target) {
+            case "focus:crc" -> com.linkscope.core.ui.Highlight.flash(crcPresetCombo);
+            case "focus:poll" -> com.linkscope.core.ui.Highlight.flash(pollToggle);
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
 }

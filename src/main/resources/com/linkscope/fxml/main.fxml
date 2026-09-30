@@ -56,6 +56,10 @@
                     <graphic><FontIcon iconLiteral="fth-terminal"/></graphic>
                     <tooltip><Tooltip text="Show / hide the log panel (Ctrl+`)"/></tooltip>
                 </ToggleButton>
+                <Button fx:id="helpButton" styleClass="button-icon">
+                    <graphic><FontIcon iconLiteral="fth-help-circle"/></graphic>
+                    <tooltip><Tooltip text="Find a feature or ask where something is (Ctrl+K)"/></tooltip>
+                </Button>
                 <Button fx:id="themeButton" styleClass="button-icon">
                     <graphic><FontIcon fx:id="themeIcon" iconLiteral="fth-sun"/></graphic>
                 </Button>

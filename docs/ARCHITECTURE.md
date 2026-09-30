@@ -70,6 +70,8 @@ com.linkscope
 │               ByteLayout (decoder grammar), PcapFiles (pure-Java pcap read/tail/write),
 │               NetInterfaces (physical-first adapter ranking, IPv4 networks, default gateways),
 │               KnownPorts (port → service names), AnsiText, AppInfo
+│   ├── help/      HelpEntry + HelpIndex: the feature catalogue (resources/help/catalogue.json)
+│   │              ranked with BM25 + synonyms + typo tolerance behind the Ctrl+K palette
 │   ├── protocol/  ModbusDecoder, ModbusEncoder, Crc16 (presets, params, pasted tables)
 │   ├── slf4j/     bridge into LogSink
 │   └── ui/        SendBarController, HistoryListController, StatusBadge, Toasts,
@@ -126,6 +128,9 @@ Each module is an FXML view + a Controller + usually a Service.
 - **FXML** under `fxml/<id>.fxml`, root styled `ls-module`, panels `ls-panel`, tooltips on
   every non-obvious control, sensible defaults so "Connect" works with zero typing.
 
+- **Findable**: add the tab and its notable sub-targets to `help/catalogue.json` and implement
+  `navigate(String)` in the controller for each `view:`/`focus:` action (flash the control with
+  `Highlight.flash`). `HelpIndexTest` checks every module has a root entry.
 ### 4.2 Adding a module (checklist)
 
 1. `modules/<id>/<Name>Service.java` and `<Name>Controller.java`, `fxml/<id>.fxml`.
@@ -149,14 +154,14 @@ the panel. For anything that produces bytes, offer "send to Decoder".
 | `.env` | project working directory, loaded once by `EnvResolver` (dotenv-java); unresolved placeholders are logged as `[UNSET: VAR]`. `.env.example` is committed, `.env` is ignored. |
 | UI preferences | `java.util.prefs` node `com/linkscope`: `module` (last selected id), `theme`, `sidebarCollapsed`, `logVisible`, `collapsedGroups`. On Windows this is `HKCU\Software\JavaSoft\Prefs\com\linkscope` (capitals are stored escaped, e.g. `sidebar/Collapsed`). |
 | Log | in memory only, capped at `LogSink.MAX_ENTRIES` (20 000); export as text/CSV from the log panel. Hidden by default, toggled from the toolbar or Ctrl+`. |
-| Keyboard | Ctrl+K quick switch, Ctrl+1..9 modules, Ctrl+B sidebar, Ctrl+` log, Ctrl+L clear log, Ctrl+H hex, Ctrl+I selected log line → Decoder, Enter sends, Up/Down history. |
+| Keyboard | Ctrl+K find a feature (palette over the help catalogue), Ctrl+1..9 modules, Ctrl+B sidebar, Ctrl+` log, Ctrl+L clear log, Ctrl+H hex, Ctrl+I selected log line → Decoder, Enter sends, Up/Down history. |
 | Theme | AtlantaFX Primer light/dark, switched at runtime by `ThemeManager`; app CSS tokens in `linkscope.css` (`ls-mono`, `ls-hint`, `ls-error-text`, `ls-warning-text`, …). |
 
 ---
 
 ## 6. Tests
 
-- JUnit 5 (`junit-bom`), run by `./gradlew build`. Suite size at 1.0.1: 187 tests.
+- JUnit 5 (`junit-bom`), run by `./gradlew build`. Suite size at 1.1.1: 242 tests.
 - `src/test/java/com/linkscope/TestSupport.java`: `awaitTrue`, `snapshot`, `logged`,
   `dumpLog`, `integrationSkipped` (`SKIP_INTEGRATION=1`, set on CI).
 - Loopback tests run anywhere: UDP, TCP, multicast, HTTP, WebSocket, Telnet, Modbus

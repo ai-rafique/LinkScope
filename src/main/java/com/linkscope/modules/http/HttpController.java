@@ -273,4 +273,12 @@ public class HttpController implements ModuleController {
     public void shutdown() {
         service.stop();
     }
+    @Override
+    public boolean navigate(String target) {
+        if (target.equals("focus:auth")) {
+            com.linkscope.core.ui.Highlight.flash(authCombo);
+            return true;
+        }
+        return false;
+    }
 }

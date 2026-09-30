@@ -82,6 +82,7 @@ public class MainController {
     @FXML private Button deletePresetButton;
     @FXML private ToggleButton logToggle;
     @FXML private Button themeButton;
+    @FXML private Button helpButton;
     @FXML private FontIcon themeIcon;
     @FXML private Label statusText;
     @FXML private Label versionLabel;
@@ -116,7 +117,8 @@ public class MainController {
         Toasts.install(root);
         loadPresetsFromDisk();
         buildSidebar();
-        quickSwitch = new QuickSwitchPopup(this::moduleTitles, this::select, STYLESHEET);
+        quickSwitch = new QuickSwitchPopup(com.linkscope.core.help.HelpIndex.load(), this::navigateTo, STYLESHEET);
+        helpButton.setOnAction(e -> quickSwitch.show(root.getScene().getWindow()));
 
         navGroup.selectedToggleProperty().addListener((obs, old, now) -> {
             if (now == null && old != null) {
@@ -376,6 +378,51 @@ public class MainController {
     private void select(int index) {
         if (index >= 0 && index < modules.size()) {
             select(modules.get(index));
+        }
+    }
+
+    /** Palette pick: open the module, then hand the sub-target to its controller or handle shell targets here. */
+    private void navigateTo(com.linkscope.core.help.HelpEntry entry) {
+        if (!entry.module().isEmpty()) {
+            ModuleEntry target = null;
+            for (ModuleEntry m : modules) {
+                if (m.descriptor().id().equals(entry.module())) {
+                    target = m;
+                    break;
+                }
+            }
+            if (target == null) {
+                Toasts.error("Module not available: " + entry.module());
+                return;
+            }
+            select(target);
+            if (!entry.action().isEmpty()) {
+                ModuleEntry t = target;
+                javafx.application.Platform.runLater(() -> {
+                    if (!t.controller().navigate(entry.action())) {
+                        Toasts.info(entry.title() + ": see the " + t.descriptor().title() + " tab");
+                    }
+                });
+            }
+            return;
+        }
+        switch (entry.action()) {
+            case "shell:log" -> {
+                logToggle.setSelected(true);
+                com.linkscope.core.ui.Highlight.flash(logToggle);
+            }
+            case "shell:presets" -> {
+                com.linkscope.core.ui.Highlight.flash(presetCombo);
+                if (entry.id().equals("shell.env")) {
+                    Toasts.info("Any preset field may hold ${VAR}; values come from .env, then the environment");
+                }
+            }
+            case "shell:theme" -> com.linkscope.core.ui.Highlight.flash(themeButton);
+            case "shell:sidebar" -> com.linkscope.core.ui.Highlight.flash(sidebarButton);
+            case "shell:keys" -> Toasts.info("Ctrl+K find · Ctrl+1..9 modules · Ctrl+B sidebar · Ctrl+` log · Ctrl+L clear log · "
+                    + "Ctrl+H hex · Ctrl+I send log line to Decoder · Enter sends · Up/Down history");
+            case "shell:status" -> com.linkscope.core.ui.Highlight.flash(versionLabel);
+            default -> Toasts.info(entry.title() + ": " + entry.about());
         }
     }
 

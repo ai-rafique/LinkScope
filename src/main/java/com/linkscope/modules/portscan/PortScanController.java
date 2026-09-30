@@ -420,6 +420,18 @@ public class PortScanController implements ModuleController {
     }
 
     @Override
+    public boolean navigate(String target) {
+        switch (target) {
+            case "focus:needed" -> com.linkscope.core.ui.Highlight.flash(neededField);
+            case "focus:range" -> com.linkscope.core.ui.Highlight.flash(rangeField);
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
     public void shutdown() {
         service.stop();
     }

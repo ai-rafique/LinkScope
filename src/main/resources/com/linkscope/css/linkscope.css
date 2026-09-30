@@ -590,6 +590,18 @@
 
 /* --- quick switch popup (Ctrl+K) -------------------------------------------- */
 
+.ls-highlight {
+    -fx-effect: dropshadow(gaussian, -color-accent-emphasis, 16, 0.7, 0, 0);
+}
+
+.ls-help-title {
+    -fx-font-weight: bold;
+}
+
+.ls-help-row {
+    -fx-padding: 4 2 4 2;
+}
+
 .quick-switch {
     -fx-background-color: -color-bg-default;
     -fx-background-radius: 8px;

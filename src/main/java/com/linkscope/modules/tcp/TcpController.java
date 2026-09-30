@@ -233,4 +233,15 @@ public class TcpController implements ModuleController {
     public void shutdown() {
         service.stop();
     }
+    @Override
+    public boolean navigate(String target) {
+        switch (target) {
+            case "focus:server" -> com.linkscope.core.ui.Highlight.flash(serverPortField);
+            case "focus:client" -> com.linkscope.core.ui.Highlight.flash(clientHostField);
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
 }

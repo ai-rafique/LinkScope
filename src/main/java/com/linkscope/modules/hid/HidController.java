@@ -310,6 +310,19 @@ public class HidController implements ModuleController {
     }
 
     @Override
+    public boolean navigate(String target) {
+        switch (target) {
+            case "focus:rumble" -> com.linkscope.core.ui.Highlight.flash(pulseButton);
+            case "focus:output" -> com.linkscope.core.ui.Highlight.flash(outputField);
+            case "focus:device" -> com.linkscope.core.ui.Highlight.flash(deviceCombo);
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
     public void shutdown() {
         service.stop();
     }
