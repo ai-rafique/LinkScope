@@ -10,7 +10,7 @@ plugins {
 
 group = "com.linkscope"
 // major.minor.patch; drives the status bar text, installer file names and jpackage's app version.
-version = "0.3.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()

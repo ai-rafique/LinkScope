@@ -26,6 +26,7 @@ public final class ModuleRegistry {
             new ModuleDescriptor("serial", "Serial", "Devices", "serial.fxml", "fth-cpu"),
             new ModuleDescriptor("modbus", "Modbus", "Devices", "modbus.fxml", "fth-sliders"),
             new ModuleDescriptor("usb", "USB", "Devices", "usb.fxml", "fth-hard-drive"),
+            new ModuleDescriptor("hid", "HID", "Devices", "hid.fxml", "fth-crosshair"),
             new ModuleDescriptor("http", "HTTP", "Web", "http.fxml", "fth-globe"),
             new ModuleDescriptor("websocket", "WebSocket", "Web", "websocket.fxml", "fth-repeat"),
             new ModuleDescriptor("ssh", "SSH", "Remote", "ssh.fxml", "fth-terminal"),

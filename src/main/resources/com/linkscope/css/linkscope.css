@@ -299,6 +299,97 @@
     -fx-effect: dropshadow(gaussian, -color-accent-emphasis, 8, 0.6, 0, 0);
 }
 
+/* --- HID: controller view -------------------------------------------------------- */
+
+.ls-hid-button {
+    -fx-min-width: 46;
+    -fx-min-height: 46;
+    -fx-pref-width: 46;
+    -fx-pref-height: 46;
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 23;
+    -fx-border-color: -color-border-default;
+    -fx-border-radius: 23;
+    -fx-border-width: 2;
+}
+
+.ls-hid-button .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.ls-hid-button.on {
+    -fx-background-color: -color-accent-emphasis;
+    -fx-border-color: -color-accent-emphasis;
+    -fx-effect: dropshadow(gaussian, -color-accent-emphasis, 12, 0.5, 0, 0);
+}
+
+.ls-hid-button.on .label {
+    -fx-text-fill: white;
+}
+
+.ls-stick {
+    -fx-background-color: -color-bg-inset;
+    -fx-background-radius: 60;
+    -fx-border-color: -color-border-default;
+    -fx-border-radius: 60;
+}
+
+.ls-stick-line {
+    -fx-stroke: -color-border-default;
+}
+
+.ls-stick-ring {
+    -fx-fill: transparent;
+    -fx-stroke: -color-border-default;
+    -fx-stroke-dash-array: 3 3;
+}
+
+.ls-stick-dot {
+    -fx-fill: -color-accent-emphasis;
+    -fx-effect: dropshadow(gaussian, -color-accent-emphasis, 8, 0.5, 0, 0);
+}
+
+.ls-axis-track {
+    -fx-background-color: -color-bg-inset;
+    -fx-background-radius: 7;
+    -fx-border-color: -color-border-default;
+    -fx-border-radius: 7;
+}
+
+.ls-axis-fill {
+    -fx-background-color: -color-accent-emphasis;
+    -fx-background-radius: 7;
+}
+
+.ls-hat-cell {
+    -fx-min-width: 30;
+    -fx-min-height: 30;
+    -fx-pref-width: 30;
+    -fx-pref-height: 30;
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 4;
+    -fx-border-color: -color-border-default;
+    -fx-border-radius: 4;
+}
+
+.ls-hat-cell .label {
+    -fx-text-fill: -color-fg-muted;
+}
+
+.ls-hat-cell.center {
+    -fx-background-color: -color-bg-inset;
+}
+
+.ls-hat-cell.on {
+    -fx-background-color: -color-accent-emphasis;
+}
+
+.ls-hat-cell.on .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
 /* Verdict chips for the "ports I need" check */
 .ls-verdict {
     -fx-padding: 4 10 4 10;

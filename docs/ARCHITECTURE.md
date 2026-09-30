@@ -98,6 +98,7 @@ Sidebar order and grouping come from `ModuleRegistry.MODULES` (`id, title, group
 | Devices | Serial `serial` | port enumeration, line settings, DTR/RTS | jSerialComm |
 | | Modbus `modbus` | RTU over serial or Modbus TCP, gap framing, CRC verification (presets / params / pasted table), request builder, polling | `ModbusLink` abstraction with `SerialLink` and `TcpLink`; decoding in `core/protocol` |
 | | USB `usb` | live USB capture through USBPcap, device tick list, records table, **Stream view** | `UsbCaptureService` runs `USBPcapCMD -d <hub> -o - …` and parses its stdout with `PcapFiles.Stream`; the helper elevates itself (spawns an elevated worker, UAC prompt). `UsbStream` (pure) builds OUT/IN byte streams with FTDI status-byte stripping and Modbus RTU decoding. |
+| | HID `hid` | live view of game controllers and other HID devices: buttons, sticks, triggers, hats, raw report; XInput rumble; HID output reports | `HidNative` (JNA over setupapi, hid.dll HidP_* parser, kernel32, xinput1_4; Windows only), `HidService` (blocking reads on a virtual thread, XInput polled at 125 Hz, 60 Hz UI flush), `ControllerView` built from `HidLayout`; pure model in `HidReport`, `XInputState`, `HidUsages` |
 | Web | HTTP `http` | requests with headers/body/auth, response viewer, history | JDK `HttpClient`; `HttpRequestSpec` parses the form |
 | | WebSocket `websocket` | text/binary frames, ping timing | JDK `WebSocket` |
 | Remote | SSH `ssh` | password/key auth, shell console, exec | JSch fork; `SshSessions` lets other tabs reuse the login |
@@ -155,7 +156,7 @@ the panel. For anything that produces bytes, offer "send to Decoder".
 
 ## 6. Tests
 
-- JUnit 5 (`junit-bom`), run by `./gradlew build`. Suite size at 0.3.0: 167 tests.
+- JUnit 5 (`junit-bom`), run by `./gradlew build`. Suite size at 1.0.1: 187 tests.
 - `src/test/java/com/linkscope/TestSupport.java`: `awaitTrue`, `snapshot`, `logged`,
   `dumpLog`, `integrationSkipped` (`SKIP_INTEGRATION=1`, set on CI).
 - Loopback tests run anywhere: UDP, TCP, multicast, HTTP, WebSocket, Telnet, Modbus
@@ -168,7 +169,8 @@ the panel. For anything that produces bytes, offer "send to Decoder".
 - Hardware/environment-gated: `LINKSCOPE_SERIAL_PAIR=COM5,COM6`,
   `LINKSCOPE_SSH_TARGET=user:pass@host:22`, Npcap present (Capture round trips and
   loopback capture), `LINKSCOPE_USB_LIVE=1` for the live USB capture (it can raise a UAC
-  prompt on the desktop running the tests).
+  prompt on the desktop running the tests), `LINKSCOPE_HID_LIVE=1` to open, read and close
+  every non-exclusive HID device on the machine.
 
 ---
 

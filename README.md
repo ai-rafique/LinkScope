@@ -33,6 +33,15 @@ setup as a named preset, and shows its state with an icon and a word, never colo
 - **Modbus** – RTU over serial or Modbus TCP: frames split on the inter-frame gap, verified
   with a configurable CRC (presets, custom parameters, or a pasted lookup table from a
   vendor manual), decoded per function code; request builder with polling.
+- **HID** – live view of any input device Windows exposes as HID: game controllers first,
+  then everything else. Buttons light up while held, stick pairs move a dot on a pad,
+  triggers and sliders fill bars, hats show on an eight-way compass, and the raw report
+  bytes sit underneath with a rate counter. Xbox controllers are read through XInput as
+  well, which separates the two triggers and adds **rumble**: two motor sliders and a
+  pulse button, so a controller can be checked end to end without a game. Other HID
+  devices accept a raw output report (LEDs, vendor commands). A "never pressed" summary
+  at close names the buttons that did not register. Keyboards and mice are exclusive to
+  Windows and cannot be opened.
 - **USB** – live USB capture through USBPcap: pick a root hub, tick the devices to watch,
   and every transfer between Windows and those devices appears as it happens, below the
   device driver, so it shows what any program sends to a USB-serial adapter or HID device
@@ -178,7 +187,9 @@ Broker tests run when
 the brokers are reachable and skip otherwise; set `SKIP_INTEGRATION=1` to skip them
 outright, as CI does. Hardware-dependent tests read their targets from environment
 variables: `LINKSCOPE_SERIAL_PAIR=COM5,COM6` for a virtual serial pair and
-`LINKSCOPE_SSH_TARGET=user:password@host:22` for SSH, SFTP and tunnel round trips.
+`LINKSCOPE_SSH_TARGET=user:password@host:22` for SSH, SFTP and tunnel round trips,
+`LINKSCOPE_USB_LIVE=1` for a live USB capture and `LINKSCOPE_HID_LIVE=1` to open every
+non-exclusive HID device once.
 
 ## Dependencies
 
