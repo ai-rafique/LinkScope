@@ -204,6 +204,7 @@ public class UsbController implements ModuleController {
 
         displayFilterField.textProperty().addListener((obs, old, now) -> applyDisplayFilter());
         applyDisplayFilter();
+        com.linkscope.modules.capture.FilterContexts.attach(displayFilterField, service.rows());
 
         statsLabel.textProperty().bind(Bindings.createStringBinding(() -> {
             long shown = filtered.size();

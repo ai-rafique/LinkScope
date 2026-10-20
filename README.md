@@ -77,7 +77,11 @@ Tunnels and SFTP can reuse the SSH tab's login instead of connecting again.
   filter in BPF syntax (`udp port 16004`, `host 192.168.1.10`) limits what the driver
   hands over; a display filter narrows the table as you type, with fields such as
   `ip.addr == 192.168.1.`, `port == 1883`, `len > 100`, `contains "hello"`, bare names
-  like `udp`, `arp`, `mqtt`, and `and` / `or` / `not` with parentheses. Right-click a
+  like `udp`, `arp`, `mqtt`, and `and` / `or` / `not` with parentheses. The field completes
+  as you type, Wireshark style: `ip.` lists `addr`, `src`, `dst`; after a field come the
+  operators; after `==` come the values seen in the capture (addresses, ports with their
+  service names, apps, USB devices); after a term come `and` / `or`. Tab or Enter accepts,
+  Ctrl+Space opens it on demand. Right-click a
   packet to filter its conversation or send its payload to the Decoder. Captures open and
   save as `.pcap`, so they round-trip with Wireshark. Needs the Npcap driver (see Install).
   USB captures made with Wireshark's USBPcap interface open too: rows are addressed as

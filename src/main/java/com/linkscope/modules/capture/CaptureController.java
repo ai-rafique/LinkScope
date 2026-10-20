@@ -131,6 +131,7 @@ public class CaptureController implements ModuleController {
 
         displayFilterField.textProperty().addListener((obs, old, now) -> applyDisplayFilter());
         applyDisplayFilter();
+        FilterContexts.attach(displayFilterField, service.rows());
 
         statsLabel.textProperty().bind(Bindings.createStringBinding(() -> {
             long shown = filtered.size();
