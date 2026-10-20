@@ -149,6 +149,27 @@ the [USBPcap](https://github.com/desowin/usbpcap) driver, which the setup.exe al
 offers when missing; Windows must restart once after installing it. Every other module works
 without either driver; the Capture and USB tabs just report what is missing.
 
+### About the bundled drivers
+
+Npcap and USBPcap are not part of LinkScope. They are separate projects by other people,
+included only so that the Capture and USB tabs work after one installer run:
+
+- **No money changes hands.** LinkScope is free, is not sold, and earns nothing from Npcap,
+  USBPcap or anything else. Nobody involved is paid by, affiliated with, or endorsed by the
+  Nmap Project (Npcap) or the USBPcap author. The driver installers are shipped unmodified
+  and run their own wizards; LinkScope does not patch, rebrand or relicense them.
+- **Each driver keeps its own licence.** [Npcap](https://npcap.com/) is under the Npcap
+  licence from Insecure.Com LLC, which permits free personal and in-house use but does not
+  grant redistribution rights; this project bundles it for its own local, non-commercial
+  use and makes no claim to pass those rights on. If you redistribute a LinkScope build
+  that contains Npcap, or use it commercially, Npcap's terms apply to you, and the clean
+  options are to obtain an [Npcap OEM licence](https://npcap.com/oem/) or to build
+  without the bundle (the Capture tab then tells you to install Npcap yourself).
+  [USBPcap](https://github.com/desowin/usbpcap) is GPL-2.0, which allows redistribution.
+- **Prefer the official sources** when you can: install Npcap from npcap.com and USBPcap
+  from its GitHub releases, or install Wireshark, which ships both. LinkScope works the
+  same way with drivers installed that way, and the portable zip assumes exactly that.
+
 ## Contributing
 
 `docs/ARCHITECTURE.md` explains how the code is organised, the module contract, where
@@ -209,4 +230,6 @@ Jackson, dotenv-java, SLF4J API. HTTP and WebSocket use the JDK's built-in clien
 
 ## License
 
-Not chosen yet. Until a license file is added, all rights reserved.
+Not chosen yet. Until a license file is added, all rights reserved. LinkScope is free to
+use and not for sale. The bundled Npcap and USBPcap installers are not covered by this
+notice; see "About the bundled drivers" under Install for their terms.
